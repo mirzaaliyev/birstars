@@ -194,7 +194,7 @@
     const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
     if (moved > (touch ? 14 : 10) || performance.now() - d.at > 800) return;
     const n = hit(d.x, d.y, touch);
-    if (n) openStar(n);
+    if (n) { flight++; openStar(n); }
   });
   sel.on('click.star', e => {
     if (performance.now() - lastOpenAt < 600 || !modal.hidden) return;
@@ -263,6 +263,7 @@
     nextBtn.textContent = !left ? 'Случайная звезда' : isCenter ? 'Перейти к звёздам' : 'Следующая звезда';
     nextBtn.hidden = left ? false : stars.filter(x => x !== n).length === 0;
     lastFocusEl = document.activeElement;
+    clearTimeout(closeTimer); modal.classList.remove('closing');
     modal.hidden = false;
     scroller.scrollTop = 0;
     requestAnimationFrame(updateMore);
@@ -273,20 +274,32 @@
   function updateMore() { scroller.classList.toggle('more', scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 4); }
   scroller.addEventListener('scroll', updateMore, { passive: true });
   addEventListener('resize', () => { if (!modal.hidden) updateMore(); });
+  // Closing plays a short fade/slide before the card is hidden.
+  let closeTimer = null;
   function closeModal(restore = true) {
-    modal.hidden = true; focus = null;
+    focus = null;
+    clearTimeout(closeTimer);
+    if (reduce) modal.hidden = true;
+    else {
+      modal.classList.add('closing');
+      closeTimer = setTimeout(() => { modal.hidden = true; modal.classList.remove('closing'); }, 200);
+    }
     if (restore && lastFocusEl && lastFocusEl.focus) lastFocusEl.focus();
   }
   // The tap that opened the card also produces a click on the backdrop beneath the finger: ignore it.
   modal.addEventListener('click', e => { if (performance.now() - lastOpenAt < 450) return; if (e.target.closest('[data-close]')) closeModal(); });
 
+  // A newer flight or a direct tap on a star cancels the pending "open on arrival".
+  let flight = 0;
   function flyTo(n, then) {
+    const my = ++flight;
+    const done = () => { if (my === flight && then) then(); };
     const k = Math.max(t.k, 1.7);
     const cy = W <= 600 ? H * .3 : H / 2;
     const target = d3.zoomIdentity.translate(W / 2, cy).scale(k).translate(-n.x, -n.y);
     focus = n;
-    if (reduce) { sel.call(zoom.transform, target); then && then(); return; }
-    sel.transition().duration(1150).ease(d3.easeCubicInOut).call(zoom.transform, target).on('end', () => then && then());
+    if (reduce) { sel.call(zoom.transform, target); done(); return; }
+    sel.transition().duration(1150).ease(d3.easeCubicInOut).call(zoom.transform, target).on('end', done);
   }
   $('random').onclick = () => {
     const unread = stars.filter(s => !state.read.has(s.id));
@@ -364,8 +377,14 @@
   /* ---------------- render loop ---------------- */
   const appear = (n, time) => reduce ? 1 : Math.max(0, Math.min(1, (time * 1000 - n.delay) / 700));
 
+  // Hover / focus / dimming are eased per frame instead of switching instantly.
+  let lastNow = performance.now();
+  const ease = (v, target, k) => v + (target - v) * k;
+
   function frame(now) {
     const time = (now - t0) / 1000;
+    const dt = Math.min(.1, Math.max(0, (now - lastNow) / 1000)); lastNow = now;
+    const k = reduce ? 1 : 1 - Math.exp(-dt * 11);   // ~200 ms to settle
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalAlpha = 1;
     const bg = ctx.createRadialGradient(W * .5, H * .45, 0, W * .5, H * .45, Math.max(W, H) * .8);
@@ -383,7 +402,10 @@
     if (state.loaded && center) {
       const active = focus || hover;
       const act = active ? nbr.get(active) : null;
-      const dimmed = n => active && act && n !== active && !act.has(n);
+      for (const n of nodes) {
+        n.hv = ease(n.hv || 0, (n === hover || n === focus) ? 1 : 0, k);                  // 0..1 highlighted
+        n.dm = ease(n.dm || 0, (active && act && n !== active && !act.has(n)) ? 1 : 0, k); // 0..1 dimmed
+      }
 
       ctx.setTransform(dpr * t.k, 0, 0, dpr * t.k, dpr * t.x, dpr * t.y);
       ctx.lineWidth = 1 / t.k;
@@ -391,8 +413,9 @@
       for (const l of links) {
         const ap = Math.min(appear(l.source, time), appear(l.target, time));
         if (ap <= 0) continue;
-        let a = l.target.type === 'center' ? .11 : .15;
-        if (active) a = (l.source === active || l.target === active) ? .55 : .04;
+        const base = l.target.type === 'center' ? .11 : .15;
+        l.em = ease(l.em || 0, active ? ((l.source === active || l.target === active) ? 1 : -1) : 0, k);
+        const a = l.em >= 0 ? base + (.55 - base) * l.em : base + (.04 - base) * -l.em;
         ctx.globalAlpha = a * ap;
         // lines to the centre stop at the edge of the logo instead of running through it
         let x2 = l.target.x, y2 = l.target.y;
@@ -407,7 +430,7 @@
       // central star
       {
         const ap = appear(center, time);
-        const R = centerR() * (hover === center || focus === center ? 1.08 : 1);
+        const R = centerR() * (1 + .08 * center.hv);
         const pulse = reduce ? 1 : .8 + .2 * Math.sin(time * .8);
         ctx.globalAlpha = ap * pulse * .9;
         const g = R * 3.4;
@@ -426,8 +449,8 @@
         const isRead = state.read.has(s.id);
         let a = isRead ? .42 : 1;
         if (!reduce && !isRead) a *= .8 + .2 * Math.sin(time * s.speed + s.phase);
-        if (dimmed(s)) a *= .28;
-        const big = (s === hover || s === focus) ? 1.6 : 1;
+        a *= 1 - .72 * s.dm;
+        const big = 1 + .6 * s.hv;
         const r = Math.max(P.star * s.size, 3 / t.k) * big;
         const g = r * (isRead ? 3.2 : 6.5);
         ctx.globalAlpha = a * ap * (isRead ? .35 : 1);
@@ -460,7 +483,7 @@
           const [sx, sy] = toScreen(s);
           if (sx < -80 || sx > W + 80 || sy < -20 || sy > H + 40) continue;
           const r = Math.max(P.star * s.size * t.k, 3);
-          ctx.globalAlpha = nameA * appear(s, time) * (state.read.has(s.id) ? .5 : 1) * (dimmed(s) ? .3 : 1);
+          ctx.globalAlpha = nameA * appear(s, time) * (state.read.has(s.id) ? .5 : 1) * (1 - .7 * s.dm);
           ctx.fillText(s.name, sx, sy + r + 18);
         }
       }
