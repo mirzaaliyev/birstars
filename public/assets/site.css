@@ -95,6 +95,7 @@ a { color: inherit; }
 .caption h1 { margin: 0; font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 500; letter-spacing: -.015em; line-height: 1.15; }
 .caption p { margin: 0; color: var(--muted); font-size: 1.05rem; white-space: pre-line; }
 .caption .btn { margin-top: .4rem; }
+.caption-link { margin-top: .2rem; }
 .caption.reveal { animation: rise .7s cubic-bezier(.2, .8, .2, 1) both; }
 
 /* galaxy */
@@ -106,7 +107,9 @@ a { color: inherit; }
 .intro h1 { margin: 0 0 .4em; font-weight: 500; font-size: clamp(1.5rem, 3vw, 2.2rem); line-height: 1.12; letter-spacing: -.015em; }
 .intro p { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.5; max-width: 34ch; }
 .hud { position: fixed; left: 0; bottom: 0; padding: 0 28px calc(env(safe-area-inset-bottom, 0px) + 26px); display: flex; flex-direction: column; align-items: flex-start; gap: .7rem; }
-.hud-links { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+.hud-links { display: flex; gap: 1.2rem; flex-wrap: wrap; align-items: baseline; }
+.hud-note { margin: 0; color: var(--muted); font-size: .85rem; }
+.hud-note .link { font-size: inherit; }
 .progress { margin: 0; font-size: .92rem; color: var(--muted); }
 .progress b { color: var(--ink); font-weight: 500; }
 .zoom { position: fixed; right: 0; bottom: 0; padding: 0 24px calc(env(safe-area-inset-bottom, 0px) + 26px); display: flex; flex-direction: column; gap: .5rem; }

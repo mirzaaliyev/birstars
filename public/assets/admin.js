@@ -2,7 +2,7 @@
   const $ = id => document.getElementById(id);
   const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; if (m10 === 1 && m100 !== 11) return a; if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return b; return c; };
   const starsWord = n => `${n} ${plural(n, 'звезда', 'звезды', 'звёзд')}`;
-  const PAGES = { teaser: 'Тизер', force: 'Второй ролик', galaxy: 'Звёздное небо' };
+  const PAGES = { teaser: 'Тизер', force: 'Второй ролик', force_end: 'Второй ролик досмотрен', galaxy: 'Звёздное небо' };
   const TEXT_KEYS = ['teaser_video', 'teaser_text', 'continue_label', 'force_video', 'force_title', 'force_text', 'force_cta',
     'galaxy_title', 'galaxy_lead', 'center_label', 'center_text', 'center_from', 'video_soon'];
 
@@ -290,7 +290,7 @@
   }
   $('refresh-visits').onclick = () => loadState().then(() => flash('Обновлено')).catch(fail);
   $('clear-visits').onclick = async () => {
-    if (!await confirmDialog({ title: 'Очистить журнал?', text: 'Все записи об открытиях удалятся. Это удобно сделать после ваших проверок, перед отправкой ссылки.', ok: 'Очистить' })) return;
+    if (!await confirmDialog({ title: 'Очистить журнал?', text: 'Все записи об открытиях удалятся, отметка о просмотре второго ролика тоже сбросится. Это удобно сделать после ваших проверок, перед отправкой ссылки.', ok: 'Очистить' })) return;
     try { await api('/api/admin/visits/clear', 'POST', {}); flash('Журнал очищен'); await loadState(); } catch (e) { fail(e); }
   };
 
