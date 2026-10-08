@@ -14,7 +14,7 @@ Birthday site for the CEO of the Bir ecosystem. Owner: Mirza (design lead). All 
 
 ## Rules
 - User content (names, texts) is always inserted with `textContent`, never `innerHTML`.
-- Visual language: black sky with a faint blue tint (hsl 210–212), white stars, white primary buttons, Google Sans. No colour accents.
+- Visual language: black sky with a faint blue tint (hsl 210–212), white stars, white primary buttons, Onest (self-hosted subset in public/assets/fonts). No colour accents.
 - Respect `prefers-reduced-motion` in every animation.
 
 ## Testing locally

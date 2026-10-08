@@ -8,7 +8,7 @@
   function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp01 = v => Math.max(0, Math.min(1, v));
-  const FONT = '"Google Sans", system-ui, sans-serif';
+  const FONT = '"Onest", system-ui, sans-serif';
 
   /* ---------------- palette: black sky, white stars with a faint cold tint ---------------- */
   const TINTS = ['#FFFFFF', '#EAF2FF', '#F3F6FA', '#DDE9F7'];

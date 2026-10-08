@@ -1,6 +1,6 @@
 @font-face {
-  font-family: "Google Sans";
-  src: url("/assets/fonts/google-sans.woff2") format("woff2");
+  font-family: "Onest";
+  src: url("/assets/fonts/onest.woff2") format("woff2");
   font-weight: 400 700;
   font-style: normal;
   font-display: swap;
@@ -19,7 +19,7 @@
   --on-accent: hsl(212 30% 4%);
   --danger: hsl(4 72% 68%);
   --radius: 14px;
-  --font: "Google Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: dark;
 }
 
