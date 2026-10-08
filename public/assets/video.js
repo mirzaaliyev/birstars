@@ -21,10 +21,12 @@
   let ytReady = null;
   function loadYouTubeApi() {
     if (window.YT && window.YT.Player) return Promise.resolve();
-    if (!ytReady) ytReady = new Promise(res => {
+    if (!ytReady) ytReady = new Promise((res, rej) => {
       const prev = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => { prev && prev(); res(); };
-      const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+      const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
+      s.onerror = () => { ytReady = null; rej(new Error('youtube api')); };
+      document.head.appendChild(s);
     });
     return ytReady;
   }
@@ -38,8 +40,9 @@
     return streamSdk;
   }
 
-  // Mounts a player into `box`. Calls onEnded when the video finishes; returns { replay }.
-  function mountPlayer(box, raw, { emptyText, onEnded } = {}) {
+  // Mounts a player into `box`. Calls onEnded when the video finishes, or onUnavailable when
+  // the end of the video can't be detected (player API blocked); returns { replay }.
+  function mountPlayer(box, raw, { emptyText, onEnded, onUnavailable } = {}) {
     const v = parseVideo(raw);
     box.querySelectorAll('iframe, .yt, .player-empty').forEach(n => n.remove());
     if (!v) {
@@ -58,7 +61,7 @@
       loadStreamSdk().then(() => {
         player = window.Stream(f);
         player.addEventListener('ended', () => onEnded && onEnded());
-      }).catch(() => {});
+      }).catch(() => onUnavailable && onUnavailable());
       return { replay() { if (player) { player.currentTime = 0; player.play(); } } };
     }
     const holder = document.createElement('div'); holder.className = 'yt'; box.appendChild(holder);
@@ -69,6 +72,13 @@
         playerVars: { rel: 0, playsinline: 1, modestbranding: 1 },
         events: { onStateChange: e => { if (e.data === 0 && onEnded) onEnded(); } },
       });
+    }).catch(() => {
+      // API blocked: fall back to a plain embed so the video still plays.
+      const f = document.createElement('iframe');
+      f.src = `https://www.youtube-nocookie.com/embed/${v.id}?rel=0&playsinline=1`;
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.title = 'Видео';
+      holder.replaceWith(f);
+      onUnavailable && onUnavailable();
     });
     return { replay() { if (player) { player.seekTo(0); player.playVideo(); } } };
   }

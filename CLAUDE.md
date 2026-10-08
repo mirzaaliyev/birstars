@@ -10,6 +10,8 @@ Birthday site for the CEO of the Bir ecosystem. Owner: Mirza (design lead). All 
 - Editable texts and video links: `lib/settings.js` `DEFAULTS`. Adding a key there + a field in `public/admin.html` (`TEXT_KEYS` in `admin.js`) is all it takes.
 - Video: `public/assets/video.js` parses Cloudflare Stream (link / embed code / 32-hex id) or YouTube links and mounts the player; the end screen uses the Stream SDK / YouTube IFrame API.
 - Sky: `public/assets/galaxy.js` (d3-force layout + canvas, d3-zoom). Layout parameters interpolate between 30 and 120 stars (`layoutParams`). Star positions are seeded by star id, so they are stable between visits. Tap detection is done on pointer events, not on `click` (d3-zoom swallows clicks with tiny pointer movement) — keep it that way.
+- Video pages (`public/assets/video-page.js`) keep the text and buttons under the video hidden until it ends (remembered per device in localStorage `birstars-watched-<page>`); if the player API can't load, they show at once.
+- Star card button: nearest unread star while any remain, then «Случайная звезда».
 - Transition `/force` → `/galaxy` is `public/assets/warp.js` (sessionStorage flag `birstars-warp`).
 
 ## Rules

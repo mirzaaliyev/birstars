@@ -252,9 +252,10 @@
     $('m-role').hidden = !$('m-role').textContent;
     $('m-name').hidden = !$('m-name').textContent;
     if (!isCenter && !state.read.has(n.id)) { state.read.add(n.id); saveRead(n.id); updateProgress(); }
+    // While unread stars remain the button leads to the nearest one; once all are read it picks a random star.
     const left = stars.some(x => !state.read.has(x.id));
-    nextBtn.textContent = isCenter ? 'Перейти к звёздам' : 'Следующая звезда';
-    nextBtn.hidden = !left;
+    nextBtn.textContent = !left ? 'Случайная звезда' : isCenter ? 'Перейти к звёздам' : 'Следующая звезда';
+    nextBtn.hidden = left ? false : stars.filter(x => x !== n).length === 0;
     lastFocusEl = document.activeElement;
     modal.hidden = false;
     modal.querySelector('.close').focus();
@@ -284,9 +285,15 @@
   nextBtn.onclick = () => {
     const from = current || center;
     const unread = stars.filter(s => !state.read.has(s.id));
-    if (!unread.length) return;
-    let n = unread[0], bd = Infinity;
-    for (const s of unread) { const d = Math.hypot(s.x - from.x, s.y - from.y); if (d < bd) { bd = d; n = s; } }
+    let n;
+    if (unread.length) {
+      let bd = Infinity;
+      for (const s of unread) { const d = Math.hypot(s.x - from.x, s.y - from.y); if (d < bd) { bd = d; n = s; } }
+    } else {
+      const pool = stars.filter(s => s !== current);
+      if (!pool.length) return;
+      n = pool[Math.floor(Math.random() * pool.length)];
+    }
     closeModal(false);
     flyTo(n, () => openStar(n));
   };
