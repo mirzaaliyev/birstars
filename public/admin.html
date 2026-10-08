@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#05070a">
+<title>Админка — Bir Stars</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/google-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body class="page-admin">
+<header class="a-head">
+  <div class="a-brand">Bir Stars <span>админка</span></div>
+  <nav class="a-nav">
+    <a href="/" target="_blank" rel="noopener">Открыть сайт</a>
+    <button class="link" id="logout">Выйти</button>
+  </nav>
+</header>
+
+<div class="a-tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="stars" id="tab-stars">Звёзды</button>
+  <button role="tab" aria-selected="false" data-tab="texts" id="tab-texts">Тексты и ролики</button>
+  <button role="tab" aria-selected="false" data-tab="visits" id="tab-visits">Открытия</button>
+</div>
+
+<main class="a-main">
+  <p class="a-error" id="fatal" hidden></p>
+
+  <!-- STARS -->
+  <section data-panel="stars" aria-labelledby="tab-stars">
+    <div class="a-toolbar">
+      <h2 id="stars-count">Звёзды</h2>
+      <div class="a-toolbar-actions">
+        <input type="search" id="search" placeholder="Поиск по имени или тексту" aria-label="Поиск">
+        <button class="btn" id="open-import">Импорт из таблицы</button>
+        <button class="btn primary" id="open-add">Добавить звезду</button>
+      </div>
+    </div>
+    <div class="a-empty" id="stars-empty" hidden>
+      <p>Звёзд пока нет. Вставьте список из таблицы или добавьте первую звезду вручную.</p>
+      <p class="muted">Чтобы сначала посмотреть, как выглядит небо, можно добавить тестовые звёзды и потом удалить их.</p>
+      <button class="btn" id="add-demo">Добавить 30 тестовых звёзд</button>
+    </div>
+    <ul class="a-list" id="stars-list"></ul>
+    <p class="muted a-nores" id="no-results" hidden>Ничего не найдено.</p>
+
+    <div class="a-danger" id="danger" hidden>
+      <div>
+        <h3>Прочитанное</h3>
+        <p class="muted" id="read-info"></p>
+        <button class="btn" id="reset-read">Сбросить прочитанное</button>
+      </div>
+      <div>
+        <h3>Удалить все звёзды</h3>
+        <p class="muted">Например, чтобы убрать тестовые перед загрузкой настоящего списка.</p>
+        <button class="btn danger-outline" id="delete-all">Удалить все звёзды</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEXTS -->
+  <section data-panel="texts" aria-labelledby="tab-texts" hidden>
+    <div class="a-switch-card">
+      <div>
+        <h3>Ссылка «Смотреть продолжение» на главной</h3>
+        <p class="muted">Включите, когда отправите вторую ссылку. Пока выключено, с тизера нельзя перейти ко второму ролику.</p>
+      </div>
+      <label class="switch"><input type="checkbox" id="show_continue"><span aria-hidden="true"></span><span class="visually-hidden">Показывать ссылку на продолжение</span></label>
+    </div>
+
+    <form id="texts-form" class="a-form" novalidate>
+      <fieldset>
+        <legend>Тизер — главная страница</legend>
+        <div class="field video-field">
+          <label for="teaser_video">Ролик</label>
+          <input id="teaser_video" name="teaser_video" autocomplete="off" spellcheck="false" placeholder="Ссылка или код встраивания из Cloudflare Stream">
+          <small class="hint" data-for="teaser_video"></small>
+        </div>
+        <div class="field"><label for="teaser_text">Текст под роликом <span class="muted">— необязательно</span></label><textarea id="teaser_text" name="teaser_text" rows="2"></textarea></div>
+        <div class="field"><label for="continue_label">Текст ссылки на продолжение</label><input id="continue_label" name="continue_label"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Второй ролик — /force</legend>
+        <div class="field video-field">
+          <label for="force_video">Ролик</label>
+          <input id="force_video" name="force_video" autocomplete="off" spellcheck="false" placeholder="Ссылка или код встраивания из Cloudflare Stream">
+          <small class="hint" data-for="force_video"></small>
+        </div>
+        <div class="field"><label for="force_title">Заголовок под роликом</label><input id="force_title" name="force_title"></div>
+        <div class="field"><label for="force_text">Текст под заголовком</label><textarea id="force_text" name="force_text" rows="3"></textarea></div>
+        <div class="field"><label for="force_cta">Кнопка перехода к небу</label><input id="force_cta" name="force_cta"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Звёздное небо — /galaxy</legend>
+        <div class="field"><label for="galaxy_title">Заголовок после числа звёзд</label><input id="galaxy_title" name="galaxy_title"><small class="hint" id="galaxy-preview"></small></div>
+        <div class="field"><label for="galaxy_lead">Подзаголовок</label><textarea id="galaxy_lead" name="galaxy_lead" rows="2"></textarea></div>
+        <div class="field"><label for="center_label">Подпись центральной звезды</label><input id="center_label" name="center_label"></div>
+        <div class="field"><label for="center_text">Текст центральной звезды</label><textarea id="center_text" name="center_text" rows="5"></textarea></div>
+        <div class="field"><label for="center_from">От кого</label><input id="center_from" name="center_from"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Прочее</legend>
+        <div class="field"><label for="video_soon">Текст вместо ролика, пока ссылка не добавлена</label><input id="video_soon" name="video_soon"></div>
+      </fieldset>
+
+      <div class="a-savebar">
+        <span class="muted" id="dirty-note">Изменений нет</span>
+        <button class="btn primary" id="save-texts" type="submit" disabled>Сохранить изменения</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- VISITS -->
+  <section data-panel="visits" aria-labelledby="tab-visits" hidden>
+    <div class="a-toolbar">
+      <h2>Открытия страниц</h2>
+      <div class="a-toolbar-actions">
+        <button class="btn" id="refresh-visits">Обновить</button>
+        <button class="btn" id="clear-visits">Очистить журнал</button>
+      </div>
+    </div>
+    <p class="muted a-note">Записываются заходы с паролем получателя. Ваши просмотры после входа в админку не записываются. Если проверяли сайт с паролем получателя, очистите журнал перед отправкой ссылки.</p>
+    <div class="a-summary" id="summary"></div>
+    <table class="a-table" id="visits-table">
+      <thead><tr><th>Когда</th><th>Страница</th><th>Устройство</th><th>Место</th></tr></thead>
+      <tbody id="visits-body"></tbody>
+    </table>
+    <p class="muted" id="visits-empty" hidden>Пока никто не открывал сайт.</p>
+  </section>
+</main>
+
+<!-- star edit -->
+<dialog class="a-dialog" id="star-dialog" aria-labelledby="star-dialog-title">
+  <form method="dialog" id="star-form" novalidate>
+    <h2 id="star-dialog-title">Новая звезда</h2>
+    <div class="field"><label for="s-name">Имя и фамилия</label><input id="s-name" autocomplete="off" required maxlength="120"></div>
+    <div class="field"><label for="s-role">Должность</label><input id="s-role" autocomplete="off" maxlength="200"></div>
+    <div class="field"><label for="s-text">Поздравление</label><textarea id="s-text" rows="7" required maxlength="3000"></textarea><small class="hint counter" id="s-count"></small></div>
+    <p class="error" id="s-error" hidden></p>
+    <div class="row">
+      <button class="btn" type="button" data-close>Отмена</button>
+      <button class="btn primary" type="submit" id="s-save">Сохранить</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- import -->
+<dialog class="a-dialog wide" id="import-dialog" aria-labelledby="import-title">
+  <form method="dialog" id="import-form" novalidate>
+    <h2 id="import-title">Импорт из таблицы</h2>
+    <p class="muted">Выделите в Google Sheets или Excel столбцы с именем, должностью и поздравлением, скопируйте и вставьте сюда. Строку с заголовками можно не убирать — она распознается. Если имя и фамилия в разных столбцах, тоже подойдёт.</p>
+    <div class="field"><label for="i-text">Строки из таблицы</label><textarea id="i-text" rows="9" spellcheck="false"></textarea></div>
+    <p class="muted" id="i-summary">Вставьте строки, чтобы увидеть, что будет добавлено.</p>
+    <ul class="a-preview" id="i-preview"></ul>
+    <p class="error" id="i-error" hidden></p>
+    <div class="row">
+      <button class="btn" type="button" data-close>Отмена</button>
+      <button class="btn primary" type="submit" id="i-save" disabled>Импортировать</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- confirm -->
+<dialog class="a-dialog small" id="confirm-dialog" aria-labelledby="c-title">
+  <form method="dialog">
+    <h2 id="c-title"></h2>
+    <p class="muted" id="c-text"></p>
+    <div class="row">
+      <button class="btn" value="cancel">Отмена</button>
+      <button class="btn danger" value="ok" id="c-ok"></button>
+    </div>
+  </form>
+</dialog>
+
+<div class="status" id="status" role="status" hidden></div>
+
+<script src="/assets/video.js"></script>
+<script src="/assets/admin.js"></script>
+</body>
+</html>

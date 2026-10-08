@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#05070a">
+<title>Bir Stars</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/google-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body class="page-galaxy">
+<canvas id="sky" aria-label="Звёздное небо с поздравлениями"></canvas>
+
+<header class="intro">
+  <h1 id="title">&nbsp;</h1>
+  <p id="lead"></p>
+</header>
+
+<div class="hud">
+  <p class="progress" id="progress" hidden></p>
+  <button class="btn" id="random" hidden>Случайная звезда</button>
+  <div class="hud-links">
+    <a class="link" href="/force">Пересмотреть ролик</a>
+    <button class="link" id="reset" hidden>Сбросить прочитанное</button>
+  </div>
+</div>
+
+<div class="zoom">
+  <button id="zin" aria-label="Приблизить">+</button>
+  <button id="zout" aria-label="Отдалить">−</button>
+  <button id="zfit" aria-label="Показать всё небо">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 7V3h4M17 7V3h-4M3 13v4h4M17 13v4h-4"/></svg>
+  </button>
+</div>
+
+<div class="empty-sky" id="empty" hidden><div><p id="empty-text"></p><button class="btn" id="retry" hidden>Попробовать снова</button></div></div>
+<div class="tip" id="tip" hidden></div>
+<div class="status" id="status" role="status" hidden></div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="m-name">
+  <div class="backdrop" data-close></div>
+  <article class="card" id="card">
+    <button class="close" data-close aria-label="Закрыть">×</button>
+    <div class="mark" aria-hidden="true"></div>
+    <p class="msg" id="m-msg"></p>
+    <div class="who">
+      <span class="name" id="m-name"></span>
+      <span class="role" id="m-role"></span>
+    </div>
+    <div class="actions"><button class="btn" id="m-next">Следующая звезда</button></div>
+  </article>
+</div>
+
+<div class="modal confirm" id="confirm" hidden role="alertdialog" aria-modal="true" aria-labelledby="c-title" aria-describedby="c-text">
+  <div class="backdrop" data-cancel></div>
+  <div class="card small">
+    <h2 id="c-title"></h2>
+    <p id="c-text"></p>
+    <div class="row">
+      <button class="btn" data-cancel>Отмена</button>
+      <button class="btn danger" id="c-ok"></button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/vendor/d3.min.js"></script>
+<script src="/assets/warp.js"></script>
+<script src="/assets/galaxy.js"></script>
+</body>
+</html>
