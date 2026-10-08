@@ -258,8 +258,15 @@
     nextBtn.hidden = left ? false : stars.filter(x => x !== n).length === 0;
     lastFocusEl = document.activeElement;
     modal.hidden = false;
+    scroller.scrollTop = 0;
+    requestAnimationFrame(updateMore);
     modal.querySelector('.close').focus();
   }
+  // Fade the bottom edge of a long text while there is more of it to scroll.
+  const scroller = $('m-scroll');
+  function updateMore() { scroller.classList.toggle('more', scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 4); }
+  scroller.addEventListener('scroll', updateMore, { passive: true });
+  addEventListener('resize', () => { if (!modal.hidden) updateMore(); });
   function closeModal(restore = true) {
     modal.hidden = true; focus = null;
     if (restore && lastFocusEl && lastFocusEl.focus) lastFocusEl.focus();

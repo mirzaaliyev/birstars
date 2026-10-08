@@ -134,12 +134,18 @@ a { color: inherit; }
   box-shadow: 0 30px 90px hsl(0 0% 0% / .6); animation: rise .38s cubic-bezier(.2, .8, .2, 1);
 }
 .card.small { width: min(25rem, calc(100vw - 32px)); padding: 1.8rem 1.8rem 1.4rem; }
+/* Star card: grows with the text up to the screen height; past that only the text scrolls,
+   while the author and the button stay in place. */
+#card { display: flex; flex-direction: column; max-height: calc(100vh - 48px); max-height: calc(100svh - 48px); }
+.card-scroll { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; outline: none; }
+.card-scroll.more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 3.5rem), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 3.5rem), transparent); }
+#card .who, #card .actions, #card .mark { flex: none; }
 .card.small h2 { margin: 0 0 .6rem; font-weight: 500; font-size: 1.2rem; }
 .card.small p { margin: 0 0 1.5rem; color: var(--muted); line-height: 1.5; font-size: .95rem; }
 .row { display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap; }
 .mark { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 4px hsl(210 80% 92% / .8); margin-bottom: 1.6rem; }
 .card.center .mark { width: 12px; height: 12px; box-shadow: 0 0 22px 7px hsl(210 80% 92% / .9); }
-.msg { margin: 0 0 1.8rem; font-size: 1.28rem; line-height: 1.55; font-weight: 400; max-width: 38ch; white-space: pre-line; overflow-wrap: anywhere; }
+.msg { margin: 0 0 1.6rem; font-size: 1.28rem; line-height: 1.55; font-weight: 400; max-width: 38ch; white-space: pre-line; overflow-wrap: anywhere; }
 .who { display: flex; flex-direction: column; gap: .2rem; }
 .name { font-weight: 500; font-size: 1rem; }
 .role { color: var(--muted); font-size: .92rem; }
@@ -160,6 +166,7 @@ a { color: inherit; }
   .zoom { padding-right: 16px; }
   .modal { place-items: end center; }
   .card { width: 100%; border-radius: 22px 22px 0 0; border-bottom: 0; padding: 2rem 1.5rem calc(env(safe-area-inset-bottom, 0px) + 1.25rem); animation-name: sheet; }
+  #card { max-height: calc(100vh - 16px); max-height: calc(100svh - env(safe-area-inset-top, 0px) - 16px); }
   .card.small { width: 100%; }
   .msg { font-size: 1.14rem; }
   .stage { gap: 1.5rem; justify-content: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 18vh); }
