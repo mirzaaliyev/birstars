@@ -20,7 +20,7 @@ Birthday site for the CEO of the Bir ecosystem. Owner: Mirza (design lead). All 
 ## Testing locally
 ```
 cp .dev.vars.example .dev.vars
-npx wrangler dev        # uses a local D1 copy; while wrangler.jsonc has no database_id yet, add a d1_databases block with any UUID in a scratch copy of the config
+npx wrangler dev        # uses a local D1 copy, the real database is untouched
 ```
 Check in a real browser (Playwright is fine): sign-in, both video pages, star taps on desktop and with touch emulation, admin import/edit/delete, the "continue" switch.
 

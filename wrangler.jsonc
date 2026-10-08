@@ -11,6 +11,8 @@
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
   },
-  // D1 database: binding DB, database "birstars". The id is added once the database exists.
+  "d1_databases": [
+    { "binding": "DB", "database_name": "birstars", "database_id": "172cb164-4b87-43c8-aa2b-c6e3a8b31680" }
+  ],
   "observability": { "enabled": true }
 }
