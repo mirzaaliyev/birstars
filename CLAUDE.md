@@ -12,7 +12,7 @@ Birthday site for the CEO of the Bir ecosystem. Owner: Mirza (design lead). All 
 - Sky: `public/assets/galaxy.js` (d3-force layout + canvas, d3-zoom). Layout parameters interpolate between 30 and 120 stars (`layoutParams`). Star positions are seeded by star id, so they are stable between visits. Tap detection is done on pointer events, not on `click` (d3-zoom swallows clicks with tiny pointer movement) — keep it that way.
 - Video pages (`public/assets/video-page.js`): the teaser shows its text and the continue link at once (the link is switched on in the admin). On `/force` the text and buttons stay hidden until the video ends; the recipient finishing it is stored in the `watched` table (`POST /api/watched`, ignored for the admin) and logged as `force_end`, so every device shows the button afterwards. If the player API can't load, they show at once. Clearing the visit log in the admin also clears `watched`.
 - Navigation back: «Посмотреть тизер» under the `/force` button; «Смотреть ролик или тизер» on the sky.
-- Logos: `public/assets/logo-circle.svg` is drawn at the centre of the sky (and on the sign-in screen and the centre card); `public/favicon.svg` is the square logo; `og.png` and `apple-touch-icon.png` are rendered from them.
+- Logos: `public/assets/logo-sky.svg` (transparent mark) is used only at the centre of the sky, where links stop at its edge. Everywhere else — favicon, sign-in screen, centre card, `apple-touch-icon.png`, `og.png` — the square logo `public/favicon.svg`.
 - Star card button: nearest unread star while any remain, then «Случайная звезда».
 - Transition `/force` → `/galaxy` is `public/assets/warp.js` (sessionStorage flag `birstars-warp`).
 

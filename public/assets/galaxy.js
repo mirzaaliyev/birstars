@@ -13,9 +13,9 @@
   /* ---------------- palette: black sky, white stars with a faint cold tint ---------------- */
   const TINTS = ['#FFFFFF', '#EAF2FF', '#F3F6FA', '#DDE9F7'];
   const CENTER_TINT = '#E4EEFA';
-  // The centre of the sky is the Bir logo (white mark in a thin circle).
+  // The centre of the sky is the Bir mark (transparent background).
   const logo = new Image();
-  logo.src = '/assets/logo-circle.svg';
+  logo.src = '/assets/logo-sky.svg';
   const logoReady = () => logo.complete && logo.naturalWidth > 0;
   // World-space radius of the logo; never smaller than 22 px on screen.
   const centerR = () => Math.max(28, 22 / t.k);
@@ -394,7 +394,14 @@
         let a = l.target.type === 'center' ? .11 : .15;
         if (active) a = (l.source === active || l.target === active) ? .55 : .04;
         ctx.globalAlpha = a * ap;
-        ctx.beginPath(); ctx.moveTo(l.source.x, l.source.y); ctx.lineTo(l.target.x, l.target.y); ctx.stroke();
+        // lines to the centre stop at the edge of the logo instead of running through it
+        let x2 = l.target.x, y2 = l.target.y;
+        if (l.target.type === 'center') {
+          const dx = l.source.x - x2, dy = l.source.y - y2, d = Math.hypot(dx, dy) || 1, cut = centerR() * 1.12;
+          if (d <= cut) continue;
+          x2 += dx / d * cut; y2 += dy / d * cut;
+        }
+        ctx.beginPath(); ctx.moveTo(l.source.x, l.source.y); ctx.lineTo(x2, y2); ctx.stroke();
       }
 
       // central star
@@ -406,9 +413,6 @@
         const g = R * 3.4;
         ctx.drawImage(sprite(CENTER_TINT), center.x - g, center.y - g, g * 2, g * 2);
         ctx.globalAlpha = ap;
-        // dark disc so the constellation lines stop at the logo's edge
-        ctx.fillStyle = 'hsl(212, 30%, 5%)';
-        ctx.beginPath(); ctx.arc(center.x, center.y, R, 0, 6.2832); ctx.fill();
         if (logoReady()) {
           ctx.drawImage(logo, center.x - R, center.y - R, R * 2, R * 2);
         } else {
