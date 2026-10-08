@@ -3,6 +3,8 @@
   "name": "birstars",
   "main": "src/index.js",
   "compatibility_date": "2025-09-01",
+  // keep variables added in the dashboard when GitHub publishes a new version
+  "keep_vars": true,
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
