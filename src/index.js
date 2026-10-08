@@ -1,6 +1,9 @@
+// Worker entry: every request comes here first (assets.run_worker_first), so nothing is served
+// without the password. Static files are then fetched from ./public through the ASSETS binding.
 import { roles } from '../lib/auth.js';
 import { getDb, now } from '../lib/db.js';
 import { loginPage } from '../lib/pages.js';
+import { handleApi } from '../lib/api.js';
 
 // Paths anyone may load: static assets (no content in them), robots, preview image, sign-in endpoint.
 const PUBLIC = [/^\/assets\//, /^\/robots\.txt$/, /^\/og\.png$/, /^\/favicon\.svg$/, /^\/api\/login$/];
@@ -27,20 +30,17 @@ async function logVisit(env, request, page) {
   } catch (_) { /* the log must never break the page */ }
 }
 
-function html(body, status = 200) {
-  return new Response(body, { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
-}
-function json(data, status) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
-}
+const html = (body, status = 200) => new Response(body, { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+const json = (data, status) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 
-async function route(ctx) {
-  const { request, env, next } = ctx;
+async function route(request, env, ctx) {
   const url = new URL(request.url);
   let p = url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/');
   if (p.length > 1) p = p.replace(/\/+$/, '');
+  const asset = () => env.ASSETS.fetch(request);
 
-  if (PUBLIC.some(r => r.test(p))) return next();
+  if (p === '/api/login') return handleApi(request, env, '/login');
+  if (PUBLIC.some(r => r.test(p))) return asset();
 
   // Writes must come from our own pages.
   if (!['GET', 'HEAD'].includes(request.method)) {
@@ -52,17 +52,18 @@ async function route(ctx) {
   const isApi = p.startsWith('/api/');
 
   if (p === '/admin' || p.startsWith('/api/admin')) {
-    if (who.admin) return next();
-    return isApi ? json({ error: 'Нужно войти заново.' }, 401) : html(loginPage({ scope: 'admin', origin: url.origin }));
+    if (!who.admin) return isApi ? json({ error: 'Нужно войти заново.' }, 401) : html(loginPage({ scope: 'admin', origin: url.origin }));
+    return isApi ? handleApi(request, env, p.slice(4)) : asset();
   }
 
   if (!who.site) {
     return isApi ? json({ error: 'Нужно войти заново.' }, 401) : html(loginPage({ scope: 'site', origin: url.origin }));
   }
 
-  if (TRACKED[p] && request.method === 'GET' && !who.admin) ctx.waitUntil(logVisit(env, request, TRACKED[p]));
+  if (isApi) return handleApi(request, env, p.slice(4));
 
-  const res = await next();
+  const res = await asset();
+  if (TRACKED[p] && request.method === 'GET' && !who.admin && res.status === 200) ctx.waitUntil(logVisit(env, request, TRACKED[p]));
   if ((res.headers.get('Content-Type') || '').includes('text/html')) {
     const r = new Response(res.body, res);
     r.headers.set('Cache-Control', 'no-store');
@@ -71,11 +72,13 @@ async function route(ctx) {
   return res;
 }
 
-export async function onRequest(ctx) {
-  const res = await route(ctx);
-  const r = new Response(res.body, res);
-  r.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
-  r.headers.set('X-Content-Type-Options', 'nosniff');
-  r.headers.set('Referrer-Policy', 'same-origin');
-  return r;
-}
+export default {
+  async fetch(request, env, ctx) {
+    const res = await route(request, env, ctx);
+    const r = new Response(res.body, res);
+    r.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    r.headers.set('X-Content-Type-Options', 'nosniff');
+    r.headers.set('Referrer-Policy', 'same-origin');
+    return r;
+  },
+};

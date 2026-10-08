@@ -11,42 +11,32 @@
 
 Весь сайт закрыт паролем получателя, админка — отдельным паролем редактора. Поисковикам индексация запрещена.
 
-Стек: Cloudflare Pages (статика из папки `public`) + Pages Functions (`functions/`) + база Cloudflare D1. Ролики — Cloudflare Stream или YouTube. Сборки нет: что лежит в репозитории, то и публикуется.
+Стек: Cloudflare Worker со статическими файлами (`public/`) и серверной частью (`src/index.js`, `lib/`) + база Cloudflare D1. Настройки — в `wrangler.jsonc`. Ролики — Cloudflare Stream или YouTube. Сборки нет: Cloudflare публикует репозиторий как есть после каждого изменения в `main`.
 
 ---
 
 ## Подключение Cloudflare (один раз)
 
-### 1. Проект Pages из GitHub
-1. Cloudflare → **Workers & Pages** → **Create** → вкладка **Pages** → **Connect to Git**.
-2. Подключите GitHub и выберите репозиторий `mirzaaliyev/birstars`.
-3. Настройки сборки:
-   - Project name: `birstars` (адрес будет `birstars.pages.dev`)
-   - Production branch: `main`
-   - Framework preset: **None**
-   - Build command: пусто
-   - Build output directory: `public`
-4. **Save and Deploy**. Первая публикация откроется с ошибкой базы — это нормально, база подключается на следующем шаге.
+Проект `birstars` уже создан в **Workers & Pages** и подключён к GitHub. Каждое изменение в ветке `main` публикуется автоматически (вкладка **Deployments**).
 
-### 2. База данных D1
-1. **Workers & Pages** → **D1 SQL Database** → **Create database** → имя `birstars`.
-2. Откройте проект `birstars` → **Settings** → **Bindings** → **Add** → **D1 database**:
-   - Variable name: `DB`
-   - D1 database: `birstars`
-
-Таблицы создаются сами при первом открытии сайта.
-
-### 3. Пароли
-Проект `birstars` → **Settings** → **Variables and Secrets** → **Add**, тип **Secret**, окружение Production:
+### 1. Пароли
+Проект `birstars` → **Settings** → **Variables and secrets** → **Add**, тип **Secret**:
 - `SITE_PASSWORD` — пароль для CEO (его вы отправите в SMS);
 - `ADMIN_PASSWORD` — пароль для админки.
 
-Смена любого из паролей выходит из сайта на всех устройствах, включая устройства CEO.
+Нажмите **Deploy**. Пароли сохраняются между публикациями. Смена любого из них выходит из сайта на всех устройствах, включая устройства CEO.
 
-### 4. Перезапуск
-**Deployments** → последняя публикация → **⋯** → **Retry deployment**. Привязки и пароли применяются только к новым публикациям.
+### 2. База данных D1
+1. **Storage & Databases** → **D1 SQL Database** → **Create database** → имя `birstars`.
+2. Скопируйте **Database ID** и впишите его в `wrangler.jsonc` в блок `d1_databases`:
+   ```jsonc
+   "d1_databases": [{ "binding": "DB", "database_name": "birstars", "database_id": "<ID>" }],
+   ```
+   Добавлять привязку через дашборд не нужно: при следующей публикации её заменит `wrangler.jsonc`.
 
-Готово: `https://birstars.pages.dev/admin`.
+Таблицы создаются сами при первом открытии сайта.
+
+Готово: `https://birstars.<ваш-поддомен>.workers.dev/admin` (точный адрес — кнопка **Visit** в проекте).
 
 ---
 
@@ -61,7 +51,7 @@
 ## Домен birstars.az
 1. Cloudflare → **Add a domain** → `birstars.az` → бесплатный тариф.
 2. Cloudflare покажет два NS-сервера. У регистратора .az замените NS-серверы домена на них. Активация занимает от нескольких минут до суток.
-3. Проект `birstars` → **Custom domains** → **Set up a custom domain** → `birstars.az`.
+3. Проект `birstars` → **Settings** → **Domains & Routes** → **Add** → **Custom domain** → `birstars.az`.
 
 Вход запоминается отдельно для каждого домена, поэтому CEO отправляйте только ссылки на `birstars.az`.
 
@@ -76,7 +66,7 @@
 ## Локальный запуск
 ```
 cp .dev.vars.example .dev.vars        # тестовые пароли
-npx wrangler pages dev public --d1 DB=birstars-local
+npx wrangler dev                      # локальная копия базы, настоящая не затрагивается
 ```
 Сайт откроется на `http://localhost:8788`.
 
