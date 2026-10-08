@@ -62,6 +62,7 @@ a { color: inherit; }
 /* login */
 .login { position: relative; z-index: 1; min-height: 100svh; display: grid; place-items: center; padding: 24px 20px; }
 .login-form { width: min(22rem, 100%); display: flex; flex-direction: column; gap: .9rem; text-align: center; }
+.login-logo { display: block; width: 64px; height: 64px; margin: 0 auto .6rem; }
 .login-form h1 { margin: 0; font-size: 1.75rem; font-weight: 500; letter-spacing: -.01em; }
 .login-form p { margin: 0 0 .6rem; }
 .login-form input {
@@ -144,7 +145,7 @@ a { color: inherit; }
 .card.small p { margin: 0 0 1.5rem; color: var(--muted); line-height: 1.5; font-size: .95rem; }
 .row { display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap; }
 .mark { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 4px hsl(210 80% 92% / .8); margin-bottom: 1.6rem; }
-.card.center .mark { width: 12px; height: 12px; box-shadow: 0 0 22px 7px hsl(210 80% 92% / .9); }
+.card.center .mark { width: 36px; height: 36px; margin-top: -6px; background: url(/assets/logo-circle.svg) center / contain no-repeat; box-shadow: 0 0 26px 2px hsl(210 80% 92% / .35); }
 .msg { margin: 0 0 1.6rem; font-size: 1.28rem; line-height: 1.55; font-weight: 400; max-width: 38ch; white-space: pre-line; overflow-wrap: anywhere; }
 .who { display: flex; flex-direction: column; gap: .2rem; }
 .name { font-weight: 500; font-size: 1rem; }

@@ -5,8 +5,8 @@ import { logVisit } from '../lib/visits.js';
 import { loginPage } from '../lib/pages.js';
 import { handleApi } from '../lib/api.js';
 
-// Paths anyone may load: static assets (no content in them), robots, preview image, sign-in endpoint.
-const PUBLIC = [/^\/assets\//, /^\/robots\.txt$/, /^\/og\.png$/, /^\/favicon\.svg$/, /^\/api\/login$/];
+// Paths anyone may load: static assets (no content in them), robots, preview image, icons, sign-in endpoint.
+const PUBLIC = [/^\/assets\//, /^\/robots\.txt$/, /^\/og\.png$/, /^\/favicon\.svg$/, /^\/apple-touch-icon\.png$/, /^\/api\/login$/];
 const TRACKED = { '/': 'teaser', '/force': 'force', '/galaxy': 'galaxy' };
 
 const html = (body, status = 200) => new Response(body, { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });

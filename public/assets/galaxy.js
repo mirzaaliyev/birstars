@@ -13,6 +13,12 @@
   /* ---------------- palette: black sky, white stars with a faint cold tint ---------------- */
   const TINTS = ['#FFFFFF', '#EAF2FF', '#F3F6FA', '#DDE9F7'];
   const CENTER_TINT = '#E4EEFA';
+  // The centre of the sky is the Bir logo (white mark in a thin circle).
+  const logo = new Image();
+  logo.src = '/assets/logo-circle.svg';
+  const logoReady = () => logo.complete && logo.naturalWidth > 0;
+  // World-space radius of the logo; never smaller than 22 px on screen.
+  const centerR = () => Math.max(28, 22 / t.k);
   const READ_FILL = '#8A96A3';
 
   /* ---------------- state ---------------- */
@@ -40,7 +46,7 @@
   function build(items) {
     P = layoutParams(items.length);
     const now = performance.now() - t0;
-    center = { id: '__center', type: 'center', name: state.settings.center_label || 'Bir', delay: 100, x: 0, y: 0, fx: 0, fy: 0 };
+    center = { id: '__center', type: 'center', name: state.settings.center_label || 'Bir', label: state.settings.center_label || '', delay: 100, x: 0, y: 0, fx: 0, fy: 0 };
     const ns = [center], ls = [];
     items.forEach((it, i) => {
       const h = hashStr(it.id), r = mulberry32(h);
@@ -153,7 +159,7 @@
     let best = null, bd = Infinity;
     for (const n of nodes) {
       const d = Math.hypot(n.x - wx, n.y - wy);
-      const vis = n.type === 'center' ? Math.max(8, 5 / t.k) * 2.4 : Math.max(P.star * n.size, 3 / t.k) * 2.5;
+      const vis = n.type === 'center' ? centerR() : Math.max(P.star * n.size, 3 / t.k) * 2.5;
       const lim = Math.max(rad, vis);
       if (d < lim && d < bd) { best = n; bd = d; }
     }
@@ -394,16 +400,21 @@
       // central star
       {
         const ap = appear(center, time);
-        const r = Math.max(8, 5 / t.k) * (hover === center || focus === center ? 1.2 : 1);
-        const pulse = reduce ? 1 : .88 + .12 * Math.sin(time * .8);
-        ctx.globalAlpha = ap * pulse;
-        const g = r * 9;
+        const R = centerR() * (hover === center || focus === center ? 1.08 : 1);
+        const pulse = reduce ? 1 : .8 + .2 * Math.sin(time * .8);
+        ctx.globalAlpha = ap * pulse * .9;
+        const g = R * 3.4;
         ctx.drawImage(sprite(CENTER_TINT), center.x - g, center.y - g, g * 2, g * 2);
         ctx.globalAlpha = ap;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath(); ctx.arc(center.x, center.y, r, 0, 6.2832); ctx.fill();
-        ctx.globalAlpha = ap * .3; ctx.strokeStyle = '#FFFFFF';
-        ctx.beginPath(); ctx.arc(center.x, center.y, r * 2.4, 0, 6.2832); ctx.stroke();
+        // dark disc so the constellation lines stop at the logo's edge
+        ctx.fillStyle = 'hsl(212, 30%, 5%)';
+        ctx.beginPath(); ctx.arc(center.x, center.y, R, 0, 6.2832); ctx.fill();
+        if (logoReady()) {
+          ctx.drawImage(logo, center.x - R, center.y - R, R * 2, R * 2);
+        } else {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath(); ctx.arc(center.x, center.y, R * .3, 0, 6.2832); ctx.fill();
+        }
       }
 
       for (const s of stars) {
@@ -430,13 +441,12 @@
       // labels: names only; they appear once neighbouring stars are far enough apart on screen
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.textAlign = 'center';
-      {
+      if (center.label) {
         const [sx, sy] = toScreen(center);
-        const r = Math.max(8 * t.k, 5);
         ctx.globalAlpha = .92 * appear(center, time);
         ctx.fillStyle = '#FFFFFF';
         ctx.font = `500 16px ${FONT}`;
-        ctx.fillText(center.name, sx, sy + r * 2.4 + 24);
+        ctx.fillText(center.label, sx, sy + centerR() * t.k + 26);
       }
       const nameA = Math.max(0, Math.min(.85, (t.k * P.link - 85) / 35));
       if (nameA > 0) {
