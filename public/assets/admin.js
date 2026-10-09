@@ -43,7 +43,7 @@
     document.querySelectorAll('[role="tab"]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
     document.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== name; });
     if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
-    if (name === 'visits') loadState().catch(fail);
+    if (name === 'visits') { loadState().catch(fail); checkNotify(); }
   }
   document.querySelectorAll('[role="tab"]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
@@ -359,6 +359,23 @@
       body.append(tr);
     }
   }
+ // Telegram notifications: status + test message.
+  let notifyChecked = false;
+  async function checkNotify() {
+    if (notifyChecked) return; notifyChecked = true;
+    try {
+      const d = await api('/api/admin/notify');
+      $('notify-info').textContent = d.configured
+        ? 'Telegram подключён: придёт сообщение, когда CEO впервые откроет каждую страницу, досмотрит второй ролик и прочитает все звёзды.'
+        : 'Уведомления в Telegram выключены. Чтобы включить, добавьте в Cloudflare секреты TG_BOT_TOKEN и TG_CHAT_ID (инструкция в README).';
+      $('notify-test').hidden = !d.configured;
+    } catch (e) { notifyChecked = false; fail(e); }
+  }
+  $('notify-test').onclick = async () => {
+    $('notify-test').disabled = true;
+    try { await api('/api/admin/notify/test', 'POST', {}); flash('Тестовое уведомление отправлено'); } catch (e) { fail(e); }
+    $('notify-test').disabled = false;
+  };
   $('refresh-visits').onclick = () => loadState().then(() => flash('Обновлено')).catch(fail);
   $('clear-visits').onclick = async () => {
     if (!await confirmDialog({ title: 'Очистить журнал?', text: 'Все записи об открытиях удалятся, отметка о просмотре второго ролика тоже сбросится. Это удобно сделать после ваших проверок, перед отправкой ссылки.', ok: 'Очистить' })) return;
