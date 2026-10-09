@@ -151,7 +151,7 @@ a { color: inherit; }
 .mark { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 4px hsl(210 80% 92% / .8); margin-bottom: 1.6rem; }
 .card.center .mark { width: 36px; height: 36px; margin-top: -6px; border-radius: 0; background: url(/favicon.svg) center / contain no-repeat; box-shadow: none; }
 /* Star icons (heart etc.) on the card, in place of the dot. */
-.mark.icon { width: 20px; height: 20px; border-radius: 0; background: center / contain no-repeat; box-shadow: none; filter: drop-shadow(0 0 7px hsl(210 80% 92% / .8)); margin-top: -4px; margin-bottom: 1.4rem; }
+.mark.icon { width: 20px; height: 20px; border-radius: 0; background: center / contain no-repeat; box-shadow: none; filter: drop-shadow(0 0 7px var(--glow, hsl(210 80% 92% / .8))); margin-top: -4px; margin-bottom: 1.4rem; }
 /* Video greeting: a vertical 9:16 player, as tall as the screen allows. */
 .card-video { position: relative; flex: none; align-self: center; height: min(58vh, 560px); height: min(58svh, 560px); aspect-ratio: 9 / 16; max-width: 100%; margin: 0 auto 1.3rem; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line); }
 .card-video iframe, .card-video .yt { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }

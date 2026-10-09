@@ -15,14 +15,14 @@ Birthday site for the CEO of the Bir ecosystem. Owner: Mirza (design lead). All 
 - Logos: `public/assets/logo-sky.svg` (transparent mark) is used only at the centre of the sky, where links stop at its edge. Everywhere else — favicon, sign-in screen, centre card, `apple-touch-icon.png`, `og.png` — the square logo `public/favicon.svg`.
 - Star card button: nearest unread star while any remain, then «Случайная звезда».
 - Stars have optional `video` (Stream/YouTube link or embed code, parsed client-side by `BirVideo.parseVideo`) and `icon`. A video star's card shows a vertical 9:16 player (`.card-video`) above a short caption; text is optional when there is a video. The player is removed on close, which stops playback.
-- Star icons: `public/assets/icons.js` (`BirIcons`) + white SVGs in `public/assets/icons/`. No icon = the usual dot. To add an icon: drop the SVG in and add one line; the admin picker and the sky pick it up. The id is stored in the DB, so never rename it. Icons are pre-tinted white/grey on canvas, like the dots.
+- Star icons: `public/assets/icons.js` (`BirIcons`) + white SVGs in `public/assets/icons/`. No icon = the usual dot. To add an icon: drop the SVG in and add one line; the admin picker and the sky pick it up. The id is stored in the DB, so never rename it. Icons are pre-tinted on canvas in `color`/`readColor` and get a `glow` halo (all optional per icon; the heart is warm amber, family greetings — the one deliberate colour accent on the sky).
 - New columns are added to existing databases by `ADDED_COLUMNS` in `lib/db.js` (PRAGMA check + ALTER TABLE) — add new star fields there, not only in `SCHEMA`.
 - Switches in the admin save immediately: `show_continue` (texts tab) and `show_roles` (stars tab; when `'0'`, `/api/content` blanks `role` so positions never reach the page). Both are listed in `SWITCHES` in `lib/settings.js`.
 - Transition `/force` → `/galaxy` is `public/assets/warp.js` (sessionStorage flag `birstars-warp`). The outgoing streaks dissolve into darkness before the page switch and the arrival starts from dark, so the browser's page switch never freezes a moving frame. Keep heavy work on `/galaxy` off the main thread during the arrival.
 
 ## Rules
 - User content (names, texts) is always inserted with `textContent`, never `innerHTML`.
-- Visual language: black sky with a faint blue tint (hsl 210–212), white stars, white primary buttons, Onest (self-hosted subset in public/assets/fonts). No colour accents.
+- Visual language: black sky with a faint blue tint (hsl 210–212), white stars, white primary buttons, Onest (self-hosted subset in public/assets/fonts). No colour accents — except the warm family hearts (colours in `icons.js`).
 - Respect `prefers-reduced-motion` in every animation.
 
 ## Testing locally

@@ -21,12 +21,12 @@
   const centerR = () => Math.max(28, 22 / t.k);
   const READ_FILL = '#8A96A3';
 
-  // Star icons (public/assets/icons.js): each SVG is pre-rendered white and read-grey, like the dots.
+  // Star icons (public/assets/icons.js): each SVG is pre-rendered in its colour and its read colour.
   const ICON_PX = 96;
   const icons = new Map();
   for (const ic of (window.BirIcons || [])) {
     const img = new Image();
-    const entry = { ...ic, ready: false, white: null, grey: null };
+    const entry = { ...ic, ready: false, lit: null, dim: null, url: '' };
     img.onload = () => {
       const tint = color => {
         const c = document.createElement('canvas'); c.width = c.height = ICON_PX;
@@ -35,7 +35,8 @@
         g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, ICON_PX, ICON_PX);
         return c;
       };
-      entry.white = tint('#FFFFFF'); entry.grey = tint(READ_FILL); entry.ready = true;
+      entry.lit = tint(ic.color || '#FFFFFF'); entry.dim = tint(ic.readColor || READ_FILL);
+      entry.url = entry.lit.toDataURL(); entry.ready = true;
     };
     img.src = ic.src;
     icons.set(ic.id, entry);
@@ -179,14 +180,16 @@
   /* ---------------- sprites & dust ---------------- */
   const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
   const sprites = new Map();
-  function sprite(tint) {
-    if (sprites.has(tint)) return sprites.get(tint);
+  // k: glow strength (coloured icon halos are a bit stronger so the colour reads on a small star).
+  function sprite(tint, k = 1) {
+    const key = tint + k;
+    if (sprites.has(key)) return sprites.get(key);
     const s = document.createElement('canvas'); s.width = s.height = 128;
     const g = s.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    gr.addColorStop(0, hexA(tint, .85)); gr.addColorStop(.14, hexA(tint, .36));
-    gr.addColorStop(.45, hexA(tint, .07)); gr.addColorStop(1, hexA(tint, 0));
+    gr.addColorStop(0, hexA(tint, Math.min(1, .85 * k))); gr.addColorStop(.14, hexA(tint, .36 * k));
+    gr.addColorStop(.45, hexA(tint, .07 * k)); gr.addColorStop(1, hexA(tint, 0));
     g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
-    sprites.set(tint, s); return s;
+    sprites.set(key, s); return s;
   }
   const dust = Array.from({ length: 700 }, () => ({ x: Math.random(), y: Math.random(), z: .12 + Math.random() * .45, r: .2 + Math.random() * 1.05, a: .1 + Math.random() * .45, ph: Math.random() * 6.28 }));
 
@@ -302,7 +305,8 @@
     if (hasVideo) window.BirVideo.mountPlayer(videoBox, n.video, {});
     const ic = !isCenter && n.icon && icons.get(n.icon);
     mark.classList.toggle('icon', !!ic);
-    mark.style.backgroundImage = ic ? `url("${ic.src}")` : '';
+    mark.style.backgroundImage = ic ? `url("${ic.url || ic.src}")` : '';
+    mark.style.setProperty('--glow', ic && ic.glow ? ic.glow : '');
     const msg = isCenter ? s.center_text : n.msg;
     $('m-msg').textContent = msg;
     $('m-msg').hidden = !msg;
@@ -510,14 +514,15 @@
         a *= 1 - .72 * s.dm;
         const big = 1 + .6 * s.hv;
         const r = Math.max(P.star * s.size, 3 / t.k) * big;
-        const g = r * (isRead ? 3.2 : 6.5);
-        ctx.globalAlpha = a * ap * (isRead ? .35 : 1);
-        ctx.drawImage(sprite(s.tint), s.x - g, s.y - g, g * 2, g * 2);
-        ctx.globalAlpha = a * ap;
         const ic = s.icon && icons.get(s.icon);
+        const warm = ic && ic.glow;                      // coloured halo, e.g. the family hearts
+        const g = r * (isRead ? 3.2 : 6.5) * (warm ? 1.3 : 1);
+        ctx.globalAlpha = a * ap * (isRead ? .35 : 1);
+        ctx.drawImage(warm ? sprite(ic.glow, 1.25) : sprite(s.tint), s.x - g, s.y - g, g * 2, g * 2);
+        ctx.globalAlpha = a * ap;
         if (ic && ic.ready) {
           const side = Math.max(r * 3.2, 12 / t.k);
-          ctx.drawImage(isRead ? ic.grey : ic.white, s.x - side / 2, s.y - side / 2, side, side);
+          ctx.drawImage(isRead ? ic.dim : ic.lit, s.x - side / 2, s.y - side / 2, side, side);
         } else {
           ctx.fillStyle = isRead ? READ_FILL : '#FFFFFF';
           ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 6.2832); ctx.fill();

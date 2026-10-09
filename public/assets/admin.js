@@ -78,7 +78,7 @@
       const rl = document.createElement('span'); rl.className = 'role'; rl.textContent = s.role;
       who.append(nm, rl);
       const ic = iconById(s.icon);
-      if (ic) { const img = document.createElement('img'); img.className = 'tag-icon'; img.src = ic.src; img.alt = ic.label; img.title = ic.label; who.append(img); }
+      if (ic) { const g = iconGlyph(ic); g.classList.add('tag-icon'); g.title = ic.label; who.append(g); }
       if (s.video) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = 'видео'; who.append(tg); }
       const tx = document.createElement('div'); tx.className = 'text'; tx.textContent = s.text;
       const acts = document.createElement('div'); acts.className = 'acts';
@@ -101,6 +101,14 @@
   const sd = $('star-dialog');
   const ICONS = window.BirIcons || [];
   const iconById = id => ICONS.find(i => i.id === id) || null;
+  // Icon in its colour: the SVG is used as a mask over the icon's colour, with its glow around it.
+  function iconGlyph(ic) {
+    const g = document.createElement('span'); g.className = 'glyph-icon'; g.setAttribute('aria-hidden', 'true');
+    g.style.setProperty('--src', `url("${ic.src}")`);
+    g.style.setProperty('--color', ic.color || '#FFFFFF');
+    if (ic.glow) g.style.setProperty('--glow', ic.glow);
+    return g;
+  }
   // Icon picker: the usual dot plus every icon from icons.js.
   (function buildIconPick() {
     const box = $('s-icons');
@@ -108,7 +116,7 @@
       const lb = document.createElement('label');
       const inp = document.createElement('input'); inp.type = 'radio'; inp.name = 's-icon'; inp.value = ic.id;
       const g = document.createElement('span'); g.className = 'glyph';
-      if (ic.src) { const img = document.createElement('img'); img.src = ic.src; img.alt = ''; g.append(img); }
+      if (ic.src) g.append(iconGlyph(ic));
       else { const d = document.createElement('span'); d.className = 'dot'; g.append(d); }
       lb.append(inp, g, document.createTextNode(ic.label));
       box.append(lb);
