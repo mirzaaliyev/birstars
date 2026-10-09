@@ -222,7 +222,7 @@
   };
   $('reset-read').onclick = async () => {
     if (!await confirmDialog({ title: 'Сбросить прочитанное?', text: `${starsWord(state.read)} снова станут непрочитанными на всех устройствах получателя.`, ok: 'Сбросить' })) return;
-    try { await api('/api/read/reset', 'POST', {}); flash('Прочитанное сброшено'); await loadState(); } catch (e) { fail(e); }
+    try { await api('/api/admin/reads/reset', 'POST', {}); flash('Прочитанное сброшено'); await loadState(); } catch (e) { fail(e); }
   };
 
   /* ---------- texts ---------- */

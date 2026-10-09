@@ -18,7 +18,7 @@ async function route(request, env, ctx) {
   if (p.length > 1) p = p.replace(/\/+$/, '');
   const asset = () => env.ASSETS.fetch(request);
 
-  if (p === '/api/login') return handleApi(request, env, '/login', { site: false, admin: false });
+  if (p === '/api/login') return handleApi(request, env, '/login', { site: false, admin: false, test: false, preview: false });
   if (PUBLIC.some(r => r.test(p))) return asset();
 
   // Writes must come from our own pages.
@@ -42,7 +42,7 @@ async function route(request, env, ctx) {
   if (isApi) return handleApi(request, env, p.slice(4), who);
 
   const res = await asset();
-  if (TRACKED[p] && request.method === 'GET' && !who.admin && res.status === 200) ctx.waitUntil(logVisit(env, request, TRACKED[p]));
+  if (TRACKED[p] && request.method === 'GET' && !who.preview && res.status === 200) ctx.waitUntil(logVisit(env, request, TRACKED[p]));
   if ((res.headers.get('Content-Type') || '').includes('text/html')) {
     const r = new Response(res.body, res);
     r.headers.set('Cache-Control', 'no-store');

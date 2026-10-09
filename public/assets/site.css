@@ -187,3 +187,16 @@ a { color: inherit; }
   .btn, .link, .close, .zoom button { transition: none; }
   .tip { animation: none; }
 }
+
+/* Preview mode (editor or test password): nothing is recorded, a quiet badge says so. */
+.preview-badge {
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 18px); right: 20px; z-index: 30;
+  padding: .3rem .7rem; border: 1px solid var(--line-strong); border-radius: 999px;
+  background: var(--panel); color: var(--muted); font-size: .75rem; letter-spacing: .02em;
+  pointer-events: none; animation: fade .4s ease both;
+}
+@media (max-width: 600px) {
+  .preview-badge { top: calc(env(safe-area-inset-top, 0px) + 12px); right: auto; left: 20px; }
+  .is-preview .intro { padding-top: calc(env(safe-area-inset-top, 0px) + 50px); }
+}
+@media (prefers-reduced-motion: reduce) { .preview-badge { animation: none; } }

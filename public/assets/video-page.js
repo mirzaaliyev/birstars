@@ -9,8 +9,10 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const box = $('player'), endcard = $('endcard'), replay = $('end-replay'), caption = $('caption');
   let ctrl = { replay() {} };
+  let preview = false;
 
   function markWatched() {
+    if (preview) { window.BirPreview.watched.add(page); return; }   // tester/editor: this browser only
     fetch('/api/watched', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page }) }).catch(() => {});
   }
 
@@ -62,7 +64,11 @@
 
   fetch('/api/content', { headers: { Accept: 'application/json' } })
     .then(r => { if (r.status === 401) { location.reload(); throw 0; } return r.json(); })
-    .then(d => render(d.settings, d.watched || []))
+    .then(d => {
+      preview = !!d.preview && !!window.BirPreview;
+      if (preview) window.BirPreview.badge();
+      render(d.settings, preview ? window.BirPreview.watched.get() : (d.watched || []));
+    })
     .catch(e => {
       if (e === 0) return;
       const p = document.createElement('div'); p.className = 'player-empty';

@@ -1,2 +1,3 @@
 SITE_PASSWORD=ceo-test
 ADMIN_PASSWORD=admin-test
+TEST_PASSWORD=team-test

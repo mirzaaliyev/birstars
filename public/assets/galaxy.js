@@ -22,7 +22,7 @@
   const READ_FILL = '#8A96A3';
 
   /* ---------------- state ---------------- */
-  const state = { settings: {}, items: [], read: new Set(), loaded: false };
+  const state = { settings: {}, items: [], read: new Set(), loaded: false, preview: false };
 
   /* ---------------- layout tuned by star count (30 → roomy, 120+ → dense) ---------------- */
   let P = layoutParams(30);
@@ -213,6 +213,7 @@
   // Marks are saved one by one in the background; a failed save is retried on the next open.
   const pending = new Set();
   async function saveRead(id) {
+    if (state.preview) { window.BirPreview.reads.add(id); return; }   // tester/editor: this browser only
     pending.add(id);
     try { await api('/api/read', { method: 'POST', body: JSON.stringify({ id }) }); pending.delete(id); }
     catch (e) { if (e.message !== 'auth') flash('Не удалось сохранить прогресс. Проверьте интернет.'); }
@@ -343,10 +344,11 @@
     const r = readCount();
     const ok = await askConfirm({
       title: 'Сбросить прочитанное?',
-      text: `${starsWord(r)} снова ${r === 1 ? 'станет непрочитанной' : 'станут непрочитанными'} — на всех устройствах.`,
+      text: `${starsWord(r)} снова ${r === 1 ? 'станет непрочитанной' : 'станут непрочитанными'} — ${state.preview ? 'только в этом браузере' : 'на всех устройствах'}.`,
       ok: 'Сбросить',
     });
     if (!ok) return;
+    if (state.preview) { window.BirPreview.reads.set([]); state.read.clear(); updateProgress(); return; }
     try { await api('/api/read/reset', { method: 'POST', body: '{}' }); state.read.clear(); updateProgress(); }
     catch (e) { if (e.message !== 'auth') flash('Не удалось сбросить. Попробуйте ещё раз.'); }
   };
@@ -362,7 +364,10 @@
     $('empty').hidden = true;
     try {
       const d = await api('/api/content');
-      state.settings = d.settings; state.items = d.stars; state.read = new Set(d.read); state.loaded = true;
+      state.settings = d.settings; state.items = d.stars; state.loaded = true;
+      state.preview = !!d.preview && !!window.BirPreview;
+      state.read = new Set(state.preview ? window.BirPreview.reads.get() : d.read);
+      if (state.preview) window.BirPreview.badge();
       build(state.items);
       updateHud();
     } catch (e) {
