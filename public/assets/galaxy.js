@@ -449,9 +449,9 @@
   const ease = (v, target, k) => v + (target - v) * k;
 
   /* ---------------- shooting stars ---------------- */
-  // Every 3–5 s a thin streak crosses the sky behind the stars (screen space, not tied to zoom).
+  // Every 5–7 s a thin streak crosses the sky behind the stars (screen space, not tied to zoom).
   // None while a card is open or with reduced motion.
-  let meteor = null, nextMeteor = 3 + Math.random() * 2;
+  let meteor = null, nextMeteor = 5 + Math.random() * 2;
   function drawMeteors(time, dt) {
     if (reduce) return;
     if (!meteor) {
@@ -469,8 +469,8 @@
     const m = meteor;
     m.age += dt; m.x += m.vx * dt; m.y += m.vy * dt;
     const p = m.age / m.life;
-    if (p >= 1) { meteor = null; nextMeteor = time + 3 + Math.random() * 2; return; }
-    const a = Math.sin(Math.PI * p) * .9;                         // fade in, then out
+    if (p >= 1) { meteor = null; nextMeteor = time + 5 + Math.random() * 2; return; }
+    const a = Math.sin(Math.PI * p) * .72;                        // fade in, then out
     const v = Math.hypot(m.vx, m.vy), tx = m.x - m.vx / v * m.len, ty = m.y - m.vy / v * m.len;
     const gr = ctx.createLinearGradient(m.x, m.y, tx, ty);
     gr.addColorStop(0, 'rgba(240,246,255,1)'); gr.addColorStop(1, 'rgba(240,246,255,0)');
