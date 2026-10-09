@@ -1,12 +1,29 @@
 // Video links pasted in the admin panel: Cloudflare Stream (link, embed code or bare ID) or YouTube.
 (() => {
+  // Player options set in the Stream dashboard and carried in the pasted link / embed code: the cover
+  // (poster), start time, captions. Colours and letterbox stay ours.
+  const KEEP = ['poster', 'startTime', 'defaultTextTrack'];
+  function streamOptions(s) {
+    const m = s.match(/https?:\/\/[^\s"'<>]*?(?:cloudflarestream\.com|videodelivery\.net)\/[a-f0-9]{32}[^\s"'<>]*/i);
+    if (!m) return {};
+    let q;
+    try { q = new URL(m[0].replace(/&amp;/g, '&')).searchParams; } catch (_) { return {}; }
+    const out = {};
+    for (const k of KEEP) { const v = q.get(k); if (v) out[k] = v; }
+    // A cover taken from the video itself is requested sharp enough for a large player.
+    if (out.poster && /cloudflarestream\.com\/[a-f0-9]{32}\/thumbnails\//i.test(out.poster)) {
+      try { const u = new URL(out.poster); u.searchParams.set('height', '1080'); u.searchParams.delete('width'); out.poster = u.toString(); } catch (_) {}
+    }
+    return out;
+  }
+
   function parseVideo(raw) {
     const s = String(raw || '').trim();
     if (!s) return null;
     let m;
     // Cloudflare Stream: customer-xxx.cloudflarestream.com/<uid>/..., iframe.videodelivery.net/<uid>, watch.cloudflarestream.com/<uid>
-    if ((m = s.match(/(customer-[a-z0-9]+\.cloudflarestream\.com)\/([a-f0-9]{32})/i))) return { type: 'stream', host: m[1].toLowerCase(), id: m[2].toLowerCase() };
-    if ((m = s.match(/(?:videodelivery\.net|cloudflarestream\.com)\/([a-f0-9]{32})/i))) return { type: 'stream', host: '', id: m[1].toLowerCase() };
+    if ((m = s.match(/(customer-[a-z0-9]+\.cloudflarestream\.com)\/([a-f0-9]{32})/i))) return { type: 'stream', host: m[1].toLowerCase(), id: m[2].toLowerCase(), opts: streamOptions(s) };
+    if ((m = s.match(/(?:videodelivery\.net|cloudflarestream\.com)\/([a-f0-9]{32})/i))) return { type: 'stream', host: '', id: m[1].toLowerCase(), opts: streamOptions(s) };
     if ((m = s.match(/^([a-f0-9]{32})$/i))) return { type: 'stream', host: '', id: m[1].toLowerCase() };
     // YouTube
     if ((m = s.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([A-Za-z0-9_-]{11})/))) return { type: 'youtube', id: m[1] };
@@ -15,7 +32,9 @@
 
   function describe(v) {
     if (!v) return '';
-    return v.type === 'stream' ? `Cloudflare Stream, ID ${v.id}` : `YouTube, ID ${v.id}`;
+    if (v.type !== 'stream') return `YouTube, ID ${v.id}`;
+    const extra = [v.opts && v.opts.poster ? 'с обложкой' : '', v.opts && v.opts.startTime ? `старт с ${v.opts.startTime}` : ''].filter(Boolean).join(', ');
+    return `Cloudflare Stream, ID ${v.id}${extra ? ' — ' + extra : ''}`;
   }
 
   let ytReady = null;
@@ -53,7 +72,8 @@
     if (v.type === 'stream') {
       const base = v.host ? `https://${v.host}/${v.id}/iframe` : `https://iframe.videodelivery.net/${v.id}`;
       const f = document.createElement('iframe');
-      f.src = `${base}?primaryColor=%23ffffff&letterboxColor=%23000000&preload=metadata`;   // black, never the page's light background
+      const q = new URLSearchParams({ ...(v.opts || {}), primaryColor: '#ffffff', letterboxColor: '#000000', preload: 'metadata' });   // black letterbox, never the page's light background
+      f.src = `${base}?${q}`;
       f.allow = 'accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen';
       f.allowFullscreen = true; f.title = 'Видео';
       box.appendChild(f);
