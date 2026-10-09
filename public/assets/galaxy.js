@@ -462,11 +462,11 @@
     }
 
     if (state.loaded && center) {
-      const active = focus || hover;
-      const act = active ? nbr.get(active) : null;
+      // Hover / focus highlights only the star itself: its links and neighbours stay as they are,
+      // so no star looks more important for being connected to another.
       for (const n of nodes) {
         n.hv = ease(n.hv || 0, (n === hover || n === focus) ? 1 : 0, k);                  // 0..1 highlighted
-        n.dm = ease(n.dm || 0, (active && act && n !== active && !act.has(n)) ? 1 : 0, k); // 0..1 dimmed
+        n.dm = 0;
       }
 
       ctx.setTransform(dpr * t.k, 0, 0, dpr * t.k, dpr * t.x, dpr * t.y);
@@ -475,10 +475,7 @@
       for (const l of links) {
         const ap = Math.min(appear(l.source, time), appear(l.target, time));
         if (ap <= 0) continue;
-        const base = l.target.type === 'center' ? .11 : .15;
-        l.em = ease(l.em || 0, active ? ((l.source === active || l.target === active) ? 1 : -1) : 0, k);
-        const a = l.em >= 0 ? base + (.55 - base) * l.em : base + (.04 - base) * -l.em;
-        ctx.globalAlpha = a * ap;
+        ctx.globalAlpha = (l.target.type === 'center' ? .11 : .15) * ap;
         // lines to the centre stop at the edge of the logo instead of running through it
         let x2 = l.target.x, y2 = l.target.y;
         if (l.target.type === 'center') {
