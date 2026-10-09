@@ -290,6 +290,9 @@
 
   /* ---------------- message card ---------------- */
   const modal = $('modal'), card = $('card'), nextBtn = $('m-next');
+  // Whether the centre card has been opened on this device (testers keep it with their local progress).
+  const centerKey = () => state.preview ? 'birstars-preview-center' : 'birstars-center-opened';
+  let centerOpened = false;
   const videoBox = $('m-video'), mark = card.querySelector('.mark');
   const stopVideo = () => { videoBox.textContent = ''; };
   function openStar(n) {
@@ -315,6 +318,7 @@
     $('m-role').hidden = !$('m-role').textContent;
     $('m-name').hidden = !$('m-name').textContent;
     if (!isCenter && !state.read.has(n.id)) { state.read.add(n.id); saveRead(n.id); updateProgress(); }
+    if (isCenter && !centerOpened) { centerOpened = true; try { localStorage.setItem(centerKey(), '1'); } catch (_) {} }
     // While unread stars remain the button leads to the nearest one; once all are read it picks a random star.
     const left = stars.some(x => !state.read.has(x.id));
     nextBtn.textContent = !left ? 'Случайная звезда' : isCenter ? 'Перейти к звёздам' : 'Следующая звезда';
@@ -425,6 +429,7 @@
       state.preview = !!d.preview && !!window.BirPreview;
       state.read = new Set(state.preview ? window.BirPreview.reads.get() : d.read);
       if (state.preview) window.BirPreview.badge();
+      try { centerOpened = localStorage.getItem(centerKey()) === '1'; } catch (_) {}
       if (!(await build(state.items))) return;
       updateHud();
     } catch (e) {
@@ -490,10 +495,22 @@
       {
         const ap = appear(center, time);
         const R = centerR() * (1 + .08 * center.hv);
-        const pulse = reduce ? 1 : .8 + .2 * Math.sin(time * .8);
+        // Until the centre has been opened it invites a tap: a slightly deeper breath of the glow
+        // and a soft ring that spreads from the logo every few seconds. Afterwards only a calm breath.
+        const invite = !reduce && !centerOpened && modal.hidden && time > 2.2;
+        const pulse = reduce ? 1 : invite ? .72 + .28 * Math.sin(time * 1.7) : .8 + .2 * Math.sin(time * .8);
         ctx.globalAlpha = ap * pulse * .9;
         const g = R * 3.4;
         ctx.drawImage(sprite(CENTER_TINT), center.x - g, center.y - g, g * 2, g * 2);
+        if (invite) {
+          const p = ((time - 2.2) % 3.4) / 1.9;            // ring for 1.9 s, then a pause
+          if (p < 1) {
+            const e = 1 - Math.pow(1 - p, 3);
+            ctx.globalAlpha = ap * .5 * Math.pow(1 - p, 1.6);
+            ctx.strokeStyle = '#E4EEFA'; ctx.lineWidth = 1.3 / t.k;
+            ctx.beginPath(); ctx.arc(center.x, center.y, R * (1.04 + .85 * e), 0, 6.2832); ctx.stroke();
+          }
+        }
         ctx.globalAlpha = ap;
         if (logoReady()) {
           ctx.drawImage(logo, center.x - R, center.y - R, R * 2, R * 2);
