@@ -19,14 +19,27 @@
   function setText(el, text) { if (!el) return; el.textContent = text || ''; el.hidden = !text; }
   function go(url) { url === '/galaxy' && window.warpTo ? window.warpTo(url) : (location.href = url); }
 
+  // Animated reveal (after the video ends): the page is centred vertically, so showing the caption
+  // would make the player jump up. Instead the player glides from its old place to the new one
+  // (FLIP), and the caption rises in just after it.
   function reveal(animate) {
     if (!caption.hidden) return;
+    if (!animate || reduce) { caption.hidden = false; return; }
+    const before = box.getBoundingClientRect().top;
     caption.hidden = false;
-    if (animate && !reduce) {
-      caption.classList.add('reveal');
-      const r = caption.getBoundingClientRect();
-      if (r.bottom > innerHeight) caption.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const shift = before - box.getBoundingClientRect().top;
+    if (Math.abs(shift) > 1) {
+      box.style.transition = 'none';
+      box.style.transform = `translateY(${shift}px)`;
+      box.getBoundingClientRect();                       // commit the starting position
+      box.style.transition = 'transform .9s cubic-bezier(.25, .8, .25, 1)';
+      box.style.transform = '';
+      box.addEventListener('transitionend', () => { box.style.transition = ''; }, { once: true });
     }
+    caption.style.animationDelay = Math.abs(shift) > 1 ? '.3s' : '0s';
+    caption.classList.add('reveal');
+    const r = caption.getBoundingClientRect();
+    if (r.bottom > innerHeight) setTimeout(() => caption.scrollIntoView({ behavior: 'smooth', block: 'end' }), 350);
   }
 
   function render(s, watched) {
