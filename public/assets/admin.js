@@ -338,7 +338,17 @@
       const p = document.createElement('p');
       if (s) { p.className = 'yes'; p.textContent = `Впервые: ${fmt(s.first)}. Всего открытий: ${s.n}.`; }
       else p.textContent = 'Ещё не открывали.';
-      box.append(h, p); sum.append(box);
+      box.append(h, p);
+      if (s) {
+        const rb = document.createElement('button'); rb.className = 'link reset-page'; rb.textContent = 'Сбросить';
+        rb.onclick = async () => {
+          const extra = key === 'force_end' ? ' Отметка «досмотрел» тоже снимется: текст и кнопка под вторым роликом снова появятся только после просмотра.' : '';
+          if (!await confirmDialog({ title: `Сбросить «${PAGES[key]}»?`, text: `${plural(s.n, 'Удалится', 'Удалятся', 'Удалятся')} ${s.n} ${plural(s.n, 'запись', 'записи', 'записей')} этой строки. Остальные строки не изменятся.${extra}`, ok: 'Сбросить' })) return;
+          try { await api('/api/admin/visits/clear', 'POST', { page: key }); flash(`«${PAGES[key]}» сброшено`); await loadState(); } catch (e) { fail(e); }
+        };
+        box.append(rb);
+      }
+      sum.append(box);
     }
     const body = $('visits-body'); body.textContent = '';
     $('visits-empty').hidden = state.visits.length > 0;

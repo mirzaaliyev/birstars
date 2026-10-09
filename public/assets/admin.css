@@ -96,6 +96,7 @@
 .a-summary h3 { margin: 0 0 .5rem; font-size: .95rem; font-weight: 500; }
 .a-summary p { margin: 0; font-size: .88rem; color: var(--muted); }
 .a-summary .yes { color: var(--ink); }
+.a-summary .reset-page { margin-top: .7rem; font-size: .82rem; }
 .a-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .a-table th { text-align: left; font-weight: 400; color: var(--muted); padding: .6rem .8rem .6rem 0; border-bottom: 1px solid var(--line-strong); }
 .a-table td { padding: .7rem .8rem .7rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
