@@ -448,6 +448,38 @@
   let lastNow = performance.now();
   const ease = (v, target, k) => v + (target - v) * k;
 
+  /* ---------------- shooting stars ---------------- */
+  // Every 3–5 s a thin streak crosses the sky behind the stars (screen space, not tied to zoom).
+  // None while a card is open or with reduced motion.
+  let meteor = null, nextMeteor = 3 + Math.random() * 2;
+  function drawMeteors(time, dt) {
+    if (reduce) return;
+    if (!meteor) {
+      if (time < nextMeteor) return;
+      if (!modal.hidden || document.hidden) { nextMeteor = time + 1; return; }
+      const dir = Math.random() < .5 ? -1 : 1;                    // left-to-right or right-to-left
+      const ang = (18 + Math.random() * 22) * Math.PI / 180;      // gently downward
+      const speed = Math.max(W, H) * (.55 + Math.random() * .3);  // px per second
+      meteor = {
+        x: W * (dir > 0 ? .05 + Math.random() * .6 : .35 + Math.random() * .6), y: H * (Math.random() * .55),
+        vx: Math.cos(ang) * speed * dir, vy: Math.sin(ang) * speed,
+        len: 90 + Math.random() * 110, life: .75 + Math.random() * .45, age: 0,
+      };
+    }
+    const m = meteor;
+    m.age += dt; m.x += m.vx * dt; m.y += m.vy * dt;
+    const p = m.age / m.life;
+    if (p >= 1) { meteor = null; nextMeteor = time + 3 + Math.random() * 2; return; }
+    const a = Math.sin(Math.PI * p) * .9;                         // fade in, then out
+    const v = Math.hypot(m.vx, m.vy), tx = m.x - m.vx / v * m.len, ty = m.y - m.vy / v * m.len;
+    const gr = ctx.createLinearGradient(m.x, m.y, tx, ty);
+    gr.addColorStop(0, 'rgba(240,246,255,1)'); gr.addColorStop(1, 'rgba(240,246,255,0)');
+    ctx.globalAlpha = a; ctx.strokeStyle = gr; ctx.lineWidth = 1.7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.globalAlpha = a * .9; ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.arc(m.x, m.y, 1.3, 0, 6.2832); ctx.fill();
+  }
+
   function frame(now) {
     const time = (now - t0) / 1000;
     const dt = Math.min(.1, Math.max(0, (now - lastNow) / 1000)); lastNow = now;
@@ -465,6 +497,8 @@
       ctx.globalAlpha = reduce ? d.a : d.a * (.65 + .35 * Math.sin(time * 1.2 + d.ph));
       ctx.beginPath(); ctx.arc(x, y, d.r, 0, 6.2832); ctx.fill();
     }
+
+    drawMeteors(time, dt);
 
     if (state.loaded && center) {
       // Hover / focus highlights only the star itself: its links and neighbours stay as they are,
