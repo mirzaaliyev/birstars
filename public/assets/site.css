@@ -193,8 +193,10 @@ a { color: inherit; }
   position: fixed; top: calc(env(safe-area-inset-top, 0px) + 18px); right: 20px; z-index: 30;
   padding: .3rem .7rem; border: 1px solid var(--line-strong); border-radius: 999px;
   background: var(--panel); color: var(--muted); font-size: .75rem; letter-spacing: .02em;
-  pointer-events: none; animation: fade .4s ease both;
+  display: flex; align-items: baseline; gap: .55rem; animation: fade .4s ease both;
 }
+.preview-badge .link { font-size: inherit; color: var(--ink); letter-spacing: inherit; }
+.preview-badge .link::before { content: "·"; color: var(--faint); margin-right: .55rem; text-decoration: none; display: inline-block; }
 @media (max-width: 600px) {
   .preview-badge { top: calc(env(safe-area-inset-top, 0px) + 12px); right: auto; left: 20px; }
   .is-preview .intro { padding-top: calc(env(safe-area-inset-top, 0px) + 50px); }

@@ -17,8 +17,19 @@
     document.body.classList.add('is-preview');
     const el = document.createElement('div');
     el.className = 'preview-badge';
-    el.textContent = 'Тестовый режим';
-    el.title = 'Просмотры и прочитанное не записываются и сохраняются только в этом браузере';
+    const label = document.createElement('span');
+    label.textContent = 'Тестовый режим';
+    label.title = 'Просмотры и прочитанное не записываются и сохраняются только в этом браузере';
+    const out = document.createElement('button');
+    out.type = 'button'; out.className = 'link'; out.textContent = 'Выйти';
+    // Signs out of everything on this device (recipient, test and admin) and back to the password screen.
+    out.onclick = async () => {
+      out.disabled = true;
+      try { await fetch('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); } catch (_) {}
+      try { Object.keys(localStorage).filter(k => k.startsWith(PREFIX)).forEach(k => localStorage.removeItem(k)); } catch (_) {}
+      location.href = '/';
+    };
+    el.append(label, out);
     document.body.appendChild(el);
   }
   window.BirPreview = { reads: list('read'), watched: list('watched'), badge };
