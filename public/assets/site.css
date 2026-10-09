@@ -150,6 +150,14 @@ a { color: inherit; }
 .row { display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap; }
 .mark { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 4px hsl(210 80% 92% / .8); margin-bottom: 1.6rem; }
 .card.center .mark { width: 36px; height: 36px; margin-top: -6px; border-radius: 0; background: url(/favicon.svg) center / contain no-repeat; box-shadow: none; }
+/* Star icons (heart etc.) on the card, in place of the dot. */
+.mark.icon { width: 20px; height: 20px; border-radius: 0; background: center / contain no-repeat; box-shadow: none; filter: drop-shadow(0 0 7px hsl(210 80% 92% / .8)); margin-top: -4px; margin-bottom: 1.4rem; }
+/* Video greeting: a vertical 9:16 player, as tall as the screen allows. */
+.card-video { position: relative; flex: none; align-self: center; height: min(58vh, 560px); height: min(58svh, 560px); aspect-ratio: 9 / 16; max-width: 100%; margin: 0 auto 1.3rem; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line); }
+.card-video iframe, .card-video .yt { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.card-video .player-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; text-align: center; color: var(--muted); }
+.card.has-video .msg { font-size: 1.05rem; margin-bottom: 1.1rem; }
+.card.has-video .mark { margin-bottom: 1rem; }
 .msg { margin: 0 0 1.6rem; font-size: 1.28rem; line-height: 1.55; font-weight: 400; max-width: 38ch; white-space: pre-line; overflow-wrap: anywhere; }
 .who { display: flex; flex-direction: column; gap: .2rem; }
 .name { font-weight: 500; font-size: 1rem; }
@@ -178,6 +186,7 @@ a { color: inherit; }
   .card.small { width: 100%; }
   .modal.closing .card { animation-name: sheet-out; }
   .msg { font-size: 1.14rem; }
+  .card-video { height: min(50vh, 520px); height: min(50svh, 520px); }
   .stage { gap: 1.5rem; justify-content: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 18vh); }
   .player { border-radius: 10px; }
   .caption p { font-size: 1rem; }
@@ -190,7 +199,7 @@ a { color: inherit; }
 
 /* Preview mode (editor or test password): nothing is recorded, a quiet badge says so. */
 .preview-badge {
-  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 18px); right: 20px; z-index: 30;
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 18px); right: 20px; z-index: 9;   /* under the star card */
   padding: .3rem .7rem; border: 1px solid var(--line-strong); border-radius: 999px;
   background: var(--panel); color: var(--muted); font-size: .75rem; letter-spacing: .02em;
   display: flex; align-items: baseline; gap: .55rem; animation: fade .4s ease both;

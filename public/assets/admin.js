@@ -77,6 +77,9 @@
       const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = s.name;
       const rl = document.createElement('span'); rl.className = 'role'; rl.textContent = s.role;
       who.append(nm, rl);
+      const ic = iconById(s.icon);
+      if (ic) { const img = document.createElement('img'); img.className = 'tag-icon'; img.src = ic.src; img.alt = ic.label; img.title = ic.label; who.append(img); }
+      if (s.video) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = 'видео'; who.append(tg); }
       const tx = document.createElement('div'); tx.className = 'text'; tx.textContent = s.text;
       const acts = document.createElement('div'); acts.className = 'acts';
       const ed = document.createElement('button'); ed.className = 'link'; ed.textContent = 'Изменить';
@@ -96,23 +99,58 @@
   // add / edit
   let editing = null;
   const sd = $('star-dialog');
+  const ICONS = window.BirIcons || [];
+  const iconById = id => ICONS.find(i => i.id === id) || null;
+  // Icon picker: the usual dot plus every icon from icons.js.
+  (function buildIconPick() {
+    const box = $('s-icons');
+    [{ id: '', label: 'Кружок' }, ...ICONS].forEach(ic => {
+      const lb = document.createElement('label');
+      const inp = document.createElement('input'); inp.type = 'radio'; inp.name = 's-icon'; inp.value = ic.id;
+      const g = document.createElement('span'); g.className = 'glyph';
+      if (ic.src) { const img = document.createElement('img'); img.src = ic.src; img.alt = ''; g.append(img); }
+      else { const d = document.createElement('span'); d.className = 'dot'; g.append(d); }
+      lb.append(inp, g, document.createTextNode(ic.label));
+      box.append(lb);
+    });
+  })();
+  const pickedIcon = () => (sd.querySelector('input[name="s-icon"]:checked') || {}).value || '';
+  function setIcon(id) {
+    const v = iconById(id) ? id : '';
+    sd.querySelectorAll('input[name="s-icon"]').forEach(i => { i.checked = i.value === v; });
+  }
   function updateCount() {
-    const n = $('s-text').value.trim().length;
-    $('s-count').textContent = n > 400 ? `${n} символов — длинное поздравление, на телефоне займёт весь экран` : `${n} символов`;
+    const n = $('s-text').value.trim().length, vid = !!$('s-video').value.trim();
+    $('s-count').textContent = vid && n > 160 ? `${n} символов — под видео лучше короткая подпись`
+      : n > 400 ? `${n} символов — длинное поздравление, на телефоне займёт весь экран` : `${n} символов`;
+    $('s-text-opt').hidden = !vid;
+  }
+  function starVideoHint() {
+    const el = $('s-video-hint'), raw = $('s-video').value.trim(), v = window.BirVideo.parseVideo(raw);
+    el.className = 'hint';
+    if (!raw) { el.textContent = 'Если добавить видео, при нажатии на звезду откроется ролик, а текст станет подписью под ним.'; }
+    else if (v) { el.classList.add('ok'); el.textContent = `Распознано: ${window.BirVideo.describe(v)}`; }
+    else { el.classList.add('bad'); el.textContent = 'Не удалось распознать. Вставьте ссылку или код встраивания из Cloudflare Stream (или ссылку на YouTube).'; }
+    updateCount();
   }
   function openStar(s) {
     editing = s || null;
     $('star-dialog-title').textContent = s ? 'Изменить звезду' : 'Новая звезда';
     $('s-name').value = s ? s.name : ''; $('s-role').value = s ? s.role : ''; $('s-text').value = s ? s.text : '';
-    $('s-error').hidden = true; updateCount();
+    $('s-video').value = s ? (s.video || '') : ''; setIcon(s ? s.icon : '');
+    $('s-error').hidden = true; starVideoHint();
     sd.showModal(); $('s-name').focus();
   }
   $('s-text').addEventListener('input', updateCount);
+  $('s-video').addEventListener('input', starVideoHint);
   $('open-add').onclick = () => openStar(null);
   $('star-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const data = { name: $('s-name').value.trim(), role: $('s-role').value.trim(), text: $('s-text').value.trim() };
-    if (!data.name || !data.text) { $('s-error').textContent = 'Заполните имя и поздравление.'; $('s-error').hidden = false; return; }
+    const data = { name: $('s-name').value.trim(), role: $('s-role').value.trim(), text: $('s-text').value.trim(), video: $('s-video').value.trim(), icon: pickedIcon() };
+    const err = !data.name ? 'Заполните имя.'
+      : data.video && !window.BirVideo.parseVideo(data.video) ? 'Ссылка на видео не распознана.'
+      : !data.text && !data.video ? 'Добавьте текст поздравления или видео.' : '';
+    if (err) { $('s-error').textContent = err; $('s-error').hidden = false; return; }
     $('s-save').disabled = true;
     try {
       if (editing) await api(`/api/admin/stars/${editing.id}`, 'PUT', data);
@@ -145,6 +183,8 @@
       name, surname: surname !== name ? surname : -1,
       role: find(/(должн|позиц|vəzifə|position|title|role)/i),
       text: find(/(поздрав|текст|təbrik|message|text|wish)/i),
+      video: find(/(видео|ролик|video)/i),
+      icon: find(/(иконк|icon|ikon)/i),
     };
   }
   function parseImport(text) {
@@ -155,18 +195,21 @@
     if (cols.name >= 0 && cols.text >= 0) start = 1;
     else {
       const w = Math.max(...rows.map(r => r.length));
-      cols = w >= 4 ? { name: 0, surname: 1, role: 2, text: 3 } : { name: 0, surname: -1, role: w >= 3 ? 1 : -1, text: w >= 3 ? 2 : 1 };
+      cols = w >= 4 ? { name: 0, surname: 1, role: 2, text: 3, video: -1, icon: -1 } : { name: 0, surname: -1, role: w >= 3 ? 1 : -1, text: w >= 3 ? 2 : 1, video: -1, icon: -1 };
     }
-    const seen = new Set(state.stars.map(s => (s.name + '|' + s.text).toLowerCase()));
+    const seen = new Set(state.stars.map(s => (s.name + '|' + s.text + '|' + (s.video || '')).toLowerCase()));
     rows.slice(start).forEach((r, i) => {
       const line = i + start + 1;
       const name = [r[cols.name], cols.surname >= 0 ? r[cols.surname] : ''].filter(Boolean).join(' ').trim();
       const role = cols.role >= 0 ? (r[cols.role] || '') : '';
       const text = (r[cols.text] || '').trim();
-      if (!name || !text) { bad.push(line); return; }
-      const key = (name + '|' + text).toLowerCase();
+      const video = cols.video >= 0 ? (r[cols.video] || '').trim() : '';
+      const iconRaw = cols.icon >= 0 ? (r[cols.icon] || '').trim().toLowerCase() : '';
+      const icon = (ICONS.find(i => i.id === iconRaw || i.label.toLowerCase() === iconRaw) || {}).id || '';
+      if (!name || (!text && !video) || (video && !window.BirVideo.parseVideo(video))) { bad.push(line); return; }
+      const key = (name + '|' + text + '|' + video).toLowerCase();
       if (seen.has(key)) { dup.push(line); return; }
-      seen.add(key); ok.push({ name, role, text });
+      seen.add(key); ok.push({ name, role, text, video, icon });
     });
     return { ok, bad, dup };
   }
@@ -181,12 +224,12 @@
     btn.textContent = ok.length ? `Импортировать ${starsWord(ok.length)}` : 'Импортировать';
     if (!v.trim()) { $('i-summary').textContent = 'Вставьте строки, чтобы увидеть, что будет добавлено.'; return; }
     const parts = [`Готово к импорту: ${ok.length}.`];
-    if (bad.length) parts.push(`Пропущены строки без имени или текста: ${bad.join(', ')}.`);
+    if (bad.length) parts.push(`Пропущены строки без имени, без текста или с нераспознанным видео: ${bad.join(', ')}.`);
     if (dup.length) parts.push(`Пропущены повторы того, что уже есть: ${dup.join(', ')}.`);
     $('i-summary').textContent = parts.join(' ');
     ok.slice(0, 5).forEach(x => {
       const li = document.createElement('li'); const b = document.createElement('b'); b.textContent = x.name;
-      li.append(b, document.createTextNode(`${x.role ? ', ' + x.role : ''} — ${x.text}`)); prev.append(li);
+      li.append(b, document.createTextNode(`${x.role ? ', ' + x.role : ''}${x.video ? ' · видео' : ''} — ${x.text}`)); prev.append(li);
     });
     if (ok.length > 5) { const li = document.createElement('li'); li.textContent = `и ещё ${ok.length - 5}`; prev.append(li); }
   });

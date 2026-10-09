@@ -21,6 +21,26 @@
   const centerR = () => Math.max(28, 22 / t.k);
   const READ_FILL = '#8A96A3';
 
+  // Star icons (public/assets/icons.js): each SVG is pre-rendered white and read-grey, like the dots.
+  const ICON_PX = 96;
+  const icons = new Map();
+  for (const ic of (window.BirIcons || [])) {
+    const img = new Image();
+    const entry = { ...ic, ready: false, white: null, grey: null };
+    img.onload = () => {
+      const tint = color => {
+        const c = document.createElement('canvas'); c.width = c.height = ICON_PX;
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0, ICON_PX, ICON_PX);
+        g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, ICON_PX, ICON_PX);
+        return c;
+      };
+      entry.white = tint('#FFFFFF'); entry.grey = tint(READ_FILL); entry.ready = true;
+    };
+    img.src = ic.src;
+    icons.set(ic.id, entry);
+  }
+
   /* ---------------- state ---------------- */
   const state = { settings: {}, items: [], read: new Set(), loaded: false, preview: false };
 
@@ -73,7 +93,7 @@
       const target = (i === 0 || r() < P.centerProb) ? center : ns[1 + Math.floor(r() * (ns.length - 1))];
       const a = r() * 6.283, d = 40 + r() * 60;
       const s = {
-        id: it.id, type: 'star', name: it.name, role: it.role || '', msg: it.text,
+        id: it.id, type: 'star', name: it.name, role: it.role || '', msg: it.text, video: it.video || '', icon: it.icon || '',
         tint: TINTS[h % TINTS.length], size: .8 + r() * .7, phase: r() * 6.283, speed: .6 + r() * 1.2,
         x: target.x + Math.cos(a) * d, y: target.y + Math.sin(a) * d, delay: null,
       };
@@ -267,13 +287,25 @@
 
   /* ---------------- message card ---------------- */
   const modal = $('modal'), card = $('card'), nextBtn = $('m-next');
+  const videoBox = $('m-video'), mark = card.querySelector('.mark');
+  const stopVideo = () => { videoBox.textContent = ''; };
   function openStar(n) {
     lastOpenAt = performance.now();
     current = n; focus = n; hideTip();
     const isCenter = n.type === 'center';
     const s = state.settings;
     card.classList.toggle('center', isCenter);
-    $('m-msg').textContent = isCenter ? s.center_text : n.msg;
+    // Video greeting: vertical player above a short caption.
+    const hasVideo = !isCenter && !!(n.video && window.BirVideo && window.BirVideo.parseVideo(n.video));
+    card.classList.toggle('has-video', hasVideo);
+    videoBox.textContent = ''; videoBox.hidden = !hasVideo;
+    if (hasVideo) window.BirVideo.mountPlayer(videoBox, n.video, {});
+    const ic = !isCenter && n.icon && icons.get(n.icon);
+    mark.classList.toggle('icon', !!ic);
+    mark.style.backgroundImage = ic ? `url("${ic.src}")` : '';
+    const msg = isCenter ? s.center_text : n.msg;
+    $('m-msg').textContent = msg;
+    $('m-msg').hidden = !msg;
     $('m-name').textContent = isCenter ? s.center_from : n.name;
     $('m-role').textContent = isCenter ? '' : n.role;
     $('m-role').hidden = !$('m-role').textContent;
@@ -299,6 +331,7 @@
   let closeTimer = null;
   function closeModal(restore = true) {
     focus = null;
+    stopVideo();
     clearTimeout(closeTimer);
     if (reduce) modal.hidden = true;
     else {
@@ -481,8 +514,14 @@
         ctx.globalAlpha = a * ap * (isRead ? .35 : 1);
         ctx.drawImage(sprite(s.tint), s.x - g, s.y - g, g * 2, g * 2);
         ctx.globalAlpha = a * ap;
-        ctx.fillStyle = isRead ? READ_FILL : '#FFFFFF';
-        ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 6.2832); ctx.fill();
+        const ic = s.icon && icons.get(s.icon);
+        if (ic && ic.ready) {
+          const side = Math.max(r * 3.2, 12 / t.k);
+          ctx.drawImage(isRead ? ic.grey : ic.white, s.x - side / 2, s.y - side / 2, side, side);
+        } else {
+          ctx.fillStyle = isRead ? READ_FILL : '#FFFFFF';
+          ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 6.2832); ctx.fill();
+        }
         if (s === focus && !reduce) {
           const p = (time * 1.2) % 1;
           ctx.globalAlpha = (1 - p) * .7; ctx.strokeStyle = '#FFFFFF';

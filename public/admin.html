@@ -149,7 +149,16 @@
     <h2 id="star-dialog-title">Новая звезда</h2>
     <div class="field"><label for="s-name">Имя и фамилия</label><input id="s-name" autocomplete="off" required maxlength="120"></div>
     <div class="field"><label for="s-role">Должность</label><input id="s-role" autocomplete="off" maxlength="200"></div>
-    <div class="field"><label for="s-text">Поздравление</label><textarea id="s-text" rows="7" required maxlength="3000"></textarea><small class="hint counter" id="s-count"></small></div>
+    <div class="field"><label for="s-text">Поздравление <span class="muted" id="s-text-opt" hidden>— к видео можно добавить короткую подпись</span></label><textarea id="s-text" rows="7" maxlength="3000"></textarea><small class="hint counter" id="s-count"></small></div>
+    <div class="field video-field">
+      <label for="s-video">Видео <span class="muted">— необязательно, вертикальное</span></label>
+      <input id="s-video" autocomplete="off" spellcheck="false" placeholder="Ссылка или код встраивания из Cloudflare Stream">
+      <small class="hint" id="s-video-hint"></small>
+    </div>
+    <fieldset class="field icon-field">
+      <legend>Звезда на небе</legend>
+      <div class="icon-pick" id="s-icons"></div>
+    </fieldset>
     <p class="error" id="s-error" hidden></p>
     <div class="row">
       <button class="btn" type="button" data-close>Отмена</button>
@@ -162,7 +171,7 @@
 <dialog class="a-dialog wide" id="import-dialog" aria-labelledby="import-title">
   <form method="dialog" id="import-form" novalidate>
     <h2 id="import-title">Импорт из таблицы</h2>
-    <p class="muted">Выделите в Google Sheets или Excel столбцы с именем, должностью и поздравлением, скопируйте и вставьте сюда. Строку с заголовками можно не убирать — она распознается. Если имя и фамилия в разных столбцах, тоже подойдёт.</p>
+    <p class="muted">Выделите в Google Sheets или Excel столбцы с именем, должностью и поздравлением, скопируйте и вставьте сюда. Строку с заголовками можно не убирать — она распознается. Если имя и фамилия в разных столбцах, тоже подойдёт. Необязательные столбцы «Видео» и «Иконка» распознаются по заголовку.</p>
     <div class="field"><label for="i-text">Строки из таблицы</label><textarea id="i-text" rows="9" spellcheck="false"></textarea></div>
     <p class="muted" id="i-summary">Вставьте строки, чтобы увидеть, что будет добавлено.</p>
     <ul class="a-preview" id="i-preview"></ul>
@@ -189,6 +198,7 @@
 <div class="status" id="status" role="status" hidden></div>
 
 <script src="/assets/video.js"></script>
+<script src="/assets/icons.js"></script>
 <script src="/assets/admin.js"></script>
 </body>
 </html>
