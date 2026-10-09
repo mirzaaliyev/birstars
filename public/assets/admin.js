@@ -56,6 +56,7 @@
     // Fill the form on first load; later refreshes must not overwrite unsaved edits.
     if (!textsFilled || !dirty()) { fillTexts(); textsFilled = true; }
     $('show_continue').checked = state.settings.show_continue === '1';
+    $('show_roles').checked = state.settings.show_roles !== '0';
   }
 
   /* ---------- stars ---------- */
@@ -264,6 +265,15 @@
       const d = await api('/api/admin/settings', 'PUT', { show_continue: on ? '1' : '0' });
       state.settings.show_continue = d.settings.show_continue;
       flash(on ? 'Ссылка на продолжение появилась на главной' : 'Ссылка на продолжение скрыта');
+    } catch (err) { e.target.checked = !on; fail(err); }
+  });
+
+  $('show_roles').addEventListener('change', async e => {
+    const on = e.target.checked;
+    try {
+      const d = await api('/api/admin/settings', 'PUT', { show_roles: on ? '1' : '0' });
+      state.settings.show_roles = d.settings.show_roles;
+      flash(on ? 'Должности показываются на карточках' : 'Должности скрыты с карточек');
     } catch (err) { e.target.checked = !on; fail(err); }
   });
 

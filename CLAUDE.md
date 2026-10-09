@@ -14,6 +14,7 @@ Birthday site for the CEO of the Bir ecosystem. Owner: Mirza (design lead). All 
 - Navigation back: «Посмотреть тизер» under the `/force` button; «Смотреть ролик или тизер» on the sky.
 - Logos: `public/assets/logo-sky.svg` (transparent mark) is used only at the centre of the sky, where links stop at its edge. Everywhere else — favicon, sign-in screen, centre card, `apple-touch-icon.png`, `og.png` — the square logo `public/favicon.svg`.
 - Star card button: nearest unread star while any remain, then «Случайная звезда».
+- Switches in the admin save immediately: `show_continue` (texts tab) and `show_roles` (stars tab; when `'0'`, `/api/content` blanks `role` so positions never reach the page). Both are listed in `SWITCHES` in `lib/settings.js`.
 - Transition `/force` → `/galaxy` is `public/assets/warp.js` (sessionStorage flag `birstars-warp`). The outgoing streaks dissolve into darkness before the page switch and the arrival starts from dark, so the browser's page switch never freezes a moving frame. Keep heavy work on `/galaxy` off the main thread during the arrival.
 
 ## Rules
