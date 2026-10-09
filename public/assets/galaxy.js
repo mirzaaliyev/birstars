@@ -43,9 +43,29 @@
   let firstBuild = true;
   const t0 = performance.now();
 
-  function build(items) {
+  // Layout runs in a worker (falls back to the main thread), so the hyperspace arrival keeps its frame rate.
+  let worker = null, workerSeq = 0;
+  const waiting = new Map();
+  try {
+    worker = new Worker('/assets/layout-worker.js');
+    worker.onmessage = e => { const w = waiting.get(e.data.id); if (w) { waiting.delete(e.data.id); w(e.data.pos); } };
+    worker.onerror = () => { worker = null; waiting.forEach(w => w(null)); waiting.clear(); };
+  } catch (_) { worker = null; }
+  function layoutPositions(P, nodes, links) {
+    const sync = () => window.birLayout(d3, P, nodes, links);
+    if (!worker) return Promise.resolve(sync());
+    return new Promise(resolve => {
+      const id = ++workerSeq;
+      const timer = setTimeout(() => { if (waiting.delete(id)) resolve(null); }, 4000);
+      waiting.set(id, pos => { clearTimeout(timer); resolve(pos); });
+      worker.postMessage({ id, P, nodes, links });
+    }).then(pos => pos || sync());
+  }
+
+  let buildSeq = 0;
+  async function build(items) {
+    const my = ++buildSeq;
     P = layoutParams(items.length);
-    const now = performance.now() - t0;
     center = { id: '__center', type: 'center', name: state.settings.center_label || 'Bir', label: state.settings.center_label || '', delay: 100, x: 0, y: 0, fx: 0, fy: 0 };
     const ns = [center], ls = [];
     items.forEach((it, i) => {
@@ -63,14 +83,13 @@
         if (t2 !== target && t2 !== s) ls.push({ source: s, target: t2 });
       }
     });
-    const sim = d3.forceSimulation(ns)
-      .force('link', d3.forceLink(ls).distance(l => l.target.type === 'center' ? P.linkCenter : P.link).strength(.55))
-      .force('charge', d3.forceManyBody().strength(d => d.type === 'center' ? P.chargeCenter : P.charge).distanceMax(P.distMax))
-      .force('x', d3.forceX(0).strength(.03))
-      .force('y', d3.forceY(0).strength(.03))
-      .force('collide', d3.forceCollide(d => d.type === 'center' ? P.collideCenter : P.collide))
-      .stop();
-    for (let i = 0; i < 500; i++) sim.tick();
+    const index = new Map(ns.map((n, i) => [n, i]));
+    const pos = await layoutPositions(P,
+      ns.map(n => ({ c: n.type === 'center', x: n.x, y: n.y })),
+      ls.map(l => [index.get(l.source), index.get(l.target)]));
+    if (my !== buildSeq) return false;
+    ns.forEach((n, i) => { n.x = pos[i][0]; n.y = pos[i][1]; });
+    const now = performance.now() - t0;
     ns.forEach(n => { if (n.delay == null) n.delay = now + 250 + Math.hypot(n.x, n.y) * .55 + Math.random() * 350; });
 
     nodes = ns; links = ls; stars = ns.filter(n => n.type === 'star');
@@ -86,6 +105,7 @@
       sel.call(zoom.transform, d3.zoomIdentity.translate(W / 2, H / 2).scale(k0));
       firstBuild = false;
     }
+    return true;
   }
 
   /* ---------------- canvas / zoom ---------------- */
@@ -368,7 +388,7 @@
       state.preview = !!d.preview && !!window.BirPreview;
       state.read = new Set(state.preview ? window.BirPreview.reads.get() : d.read);
       if (state.preview) window.BirPreview.badge();
-      build(state.items);
+      if (!(await build(state.items))) return;
       updateHud();
     } catch (e) {
       if (e.message === 'auth') return;
