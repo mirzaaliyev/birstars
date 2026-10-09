@@ -81,10 +81,12 @@ a { color: inherit; }
 }
 .player {
   position: relative; width: min(1120px, 100%, calc((100svh - 280px) * 16 / 9)); min-width: min(100%, 320px);
-  aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; background: #000;
+  aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; background: #000; isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black);   /* Safari: clip the iframe to the corners */
   box-shadow: 0 0 0 1px var(--line), 0 50px 140px -30px hsl(210 70% 40% / .35);
 }
-.player iframe, .player .yt { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* The frame overhangs the rounded box by 1 px on every side: at fractional player sizes the video
+   otherwise stops a sub-pixel short of the edge and a light seam shows along the sides. */
+.player iframe, .player .yt { position: absolute; top: -1px; left: -1px; width: calc(100% + 2px); height: calc(100% + 2px); border: 0; background: #000; }
 .player-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
 .endcard {
   position: absolute; inset: 0; z-index: 2; display: grid; place-items: center;
@@ -153,8 +155,8 @@ a { color: inherit; }
 /* Star icons (heart etc.) on the card, in place of the dot. */
 .mark.icon { width: 20px; height: 20px; border-radius: 0; background: center / contain no-repeat; box-shadow: none; filter: drop-shadow(0 0 7px var(--glow, hsl(210 80% 92% / .8))); margin-top: -4px; margin-bottom: 1.4rem; }
 /* Video greeting: a vertical 9:16 player, as tall as the screen allows. */
-.card-video { position: relative; flex: none; align-self: center; height: min(58vh, 560px); height: min(58svh, 560px); aspect-ratio: 9 / 16; max-width: 100%; margin: 0 auto 1.3rem; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line); }
-.card-video iframe, .card-video .yt { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.card-video { position: relative; flex: none; align-self: center; height: min(58vh, 560px); height: min(58svh, 560px); aspect-ratio: 9 / 16; max-width: 100%; margin: 0 auto 1.3rem; border-radius: 14px; overflow: hidden; background: #000; isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black); box-shadow: 0 0 0 1px var(--line); }
+.card-video iframe, .card-video .yt { position: absolute; top: -1px; left: -1px; width: calc(100% + 2px); height: calc(100% + 2px); border: 0; background: #000; }
 .card-video .player-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; text-align: center; color: var(--muted); }
 .card.has-video .msg { font-size: 1.05rem; margin-bottom: 1.1rem; }
 .card.has-video .mark { margin-bottom: 1rem; }

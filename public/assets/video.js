@@ -53,7 +53,7 @@
     if (v.type === 'stream') {
       const base = v.host ? `https://${v.host}/${v.id}/iframe` : `https://iframe.videodelivery.net/${v.id}`;
       const f = document.createElement('iframe');
-      f.src = `${base}?primaryColor=%23ffffff&letterboxColor=transparent&preload=metadata`;
+      f.src = `${base}?primaryColor=%23ffffff&letterboxColor=%23000000&preload=metadata`;   // black, never the page's light background
       f.allow = 'accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen';
       f.allowFullscreen = true; f.title = 'Видео';
       box.appendChild(f);
